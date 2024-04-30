@@ -1,6 +1,8 @@
 const Service = require("../models/Service");
 const User = require("../models/User");
 const {uploadImageToCloudinary} = require("../utils/imageUploader");
+const Sector = require("../models/Sector");
+
 require("dotenv").config();
 
 exports.createService = async(req,res) => {
@@ -8,7 +10,7 @@ exports.createService = async(req,res) => {
 
         const userId = req.user.id;
         //fetch data
-        const {serviceName,serviceDescription,status} = req.body;
+        const {serviceName,serviceDescription,status,sector} = req.body;
 
         const icon = req.files.serviceIcon;
         console.log("icon:", icon);
@@ -26,6 +28,14 @@ exports.createService = async(req,res) => {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required",
+            });
+        }
+
+        const sectorDetails = await Sector.findById(sector);
+        if(!sectorDetails) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sector Details not found',
             });
         }
 
@@ -53,6 +63,7 @@ exports.createService = async(req,res) => {
             serviceDescription,
             icon: serviceIcon.secure_url,
             status: status,
+            sector:sector,
         });
 
         //add the service to the admin schema 

@@ -563,3 +563,93 @@ exports.showAppliedCandidates = async (req, res) => {
         })
     }
 };
+
+
+
+// exports.getTopJobPostings = async (req, res) => {
+//     try {
+//         const topJobPostings = await Job.aggregate([
+//             { 
+//                 $match: { status: "Active" } // Filter active job postings
+//             },
+//             {
+//                 $group: {
+//                     _id: "$jobTitle", // Group by job title
+//                     totalJobs: { $sum: "$numberOfVacancy" } // Count total jobs for each title
+//                 }
+//             },
+//             {
+//                 $sort: { totalJobs: -1 } // Sort by total jobs in descending order
+//             },
+//             {
+//                 $limit: 5 // Limit to the top 5 job postings
+//             }
+//         ]);
+
+//         // Transform the result to include only job title and total jobs
+//         const formattedResults = topJobPostings.map(job => ({
+//             jobTitle: job._id,
+//             totalJobs: job.totalJobs
+//         }));
+
+//         return res.status(200).json({ success: true, data: formattedResults });
+//     } catch (error) {
+//         return res.status(500).json({ success: false, message: error.message });
+//     }
+// };
+
+exports.getTopJobPostings = async (req, res) => {
+    try {
+      const result = await Job.aggregate([
+        // Group by job title and count the number of job postings for each title
+        { $group: { _id: "$jobTitle", count: { $sum: 1 } } },
+        // Sort by count in descending order
+        { $sort: { count: -1 } },
+        // Limit to the top 5 job titles
+        { $limit: 5 },
+        // Project to rename fields and include only necessary fields
+        {
+          $project: {
+            _id: 0,
+            jobTitle: "$_id",
+            numberOfJobPostings: "$count"
+          }
+        }
+      ]);
+  
+      return res.status(200).json({ success: true, data: result });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+
+// exports.searchActiveJobs = async (searchTerm) => {
+//     try {
+//       // Perform a case-insensitive search for job titles containing the searchTerm
+//       const result = await Job.find({
+//         jobTitle: { $regex: searchTerm, $options: "i" },
+//         status: "Active"
+//       });
+      
+//       return result;
+//     } catch (error) {
+//       throw new Error(error.message);
+//     }
+//   };
+
+exports.searchJobs = async (req, res) => {
+    const { keyword } = req.query;
+  
+    try {
+      const jobs = await Job.find({
+        jobTitle: { $regex: keyword, $options: 'i' }, // Case-insensitive search
+        status: "Active"
+      }); // Limiting to 10 results
+  
+      res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
