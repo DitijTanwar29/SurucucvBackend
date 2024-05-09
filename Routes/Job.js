@@ -31,7 +31,7 @@ router.get("/showAppliedJobs", auth, showAppliedJobs);
 router.get("/showAppliedCandidates", showAppliedCandidates);
 router.get("/getTopJobPostings", getTopJobPostings);
 router.get('/searchJobs', searchJobs);
-router.get('/recentlyPubl;ished', getRecentlyPublishedJobs);
+router.get('/recentlyPublishedJobs', getRecentlyPublishedJobs);
 router.get('/fullTimeJobs', getFullTimeJobs);
 router.get('/partTimeJobs', getPartTimeJobs);
 module.exports = router;
