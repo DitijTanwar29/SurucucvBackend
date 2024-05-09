@@ -7,7 +7,8 @@ const router = express.Router();
 //Job controllers Import
 const { createJob, showAllJobs, updateJob, deleteJob, getJobDetails, approveAJobPost, 
     getAllApprovedJobPosts, applyForJob, showAppliedJobs, showAppliedCandidates,
-    getTopJobPostings, searchJobs } = require("../controllers/Job");
+    getTopJobPostings, searchJobs, getRecentlyPublishedJobs,
+    getFullTimeJobs, getPartTimeJobs } = require("../controllers/Job");
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
@@ -30,4 +31,7 @@ router.get("/showAppliedJobs", auth, showAppliedJobs);
 router.get("/showAppliedCandidates", showAppliedCandidates);
 router.get("/getTopJobPostings", getTopJobPostings);
 router.get('/searchJobs', searchJobs);
+router.get('/recentlyPubl;ished', getRecentlyPublishedJobs);
+router.get('/fullTimeJobs', getFullTimeJobs);
+router.get('/partTimeJobs', getPartTimeJobs);
 module.exports = router;

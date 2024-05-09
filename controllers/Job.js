@@ -396,6 +396,10 @@ exports.approveAJobPost = async (req, res) => {
     
         // Update job status
         job.status = status;
+
+        if(status ==="Active"){
+            job.publishedDate = Date.now();
+        }
         await job.save();
     
         return res.status(200).json({ success: true, message: 'Job status updated successfully', data: job });
@@ -641,15 +645,97 @@ exports.getTopJobPostings = async (req, res) => {
 
 exports.searchJobs = async (req, res) => {
     const { keyword } = req.query;
-  
+  console.log("value of keyword in backend req :",keyword)
     try {
       const jobs = await Job.find({
         jobTitle: { $regex: keyword, $options: 'i' }, // Case-insensitive search
         status: "Active"
       }); // Limiting to 10 results
+
+      if(jobs.length === 0 ){
+        return res.status(404).json({success: false, message: "Jobs not available for this search"})
+      }
+      console.log("searched jobs backend response :",jobs)
   
       res.status(200).json({ success: true, data: jobs });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+
+  exports.getRecentlyPublishedJobs = async (req, res) => {
+    try {
+        const jobs = await Job.find({ status: 'Active' })
+            .sort({ publishedDate: -1 }) // Sort by published date in descending order
+            .limit(6)
+            .populate({
+                path: "company",
+                populate: {
+                    path: "User",
+                }
+            }); // Limit the results to 6 jobs
+        res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+// for testing same thing
+exports.getJobTypesJobs = async (req, res) => {
+    const { keyword } = req.query;
+
+    try {
+        const jobs = await Job.find({ status: 'Active',
+        jobType: { $regex: keyword, $options: 'i' }, // Case-insensitive search
+
+     })
+            
+            .limit(6)
+            .populate({
+                path: "company",
+                populate: {
+                    path: "User",
+                }
+            }); // Limit the results to 6 jobs
+        res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getFullTimeJobs = async (req, res) => {
+    try {
+        const jobs = await Job.find({ status: 'Active', jobType: "Full Time" })
+            //.sort({  }) // Sort by published date in descending order
+            .limit(6)
+            .populate({
+                path: "company",
+                populate: {
+                    path: "User",
+                }
+            }); // Limit the results to 6 jobs
+        res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getPartTimeJobs = async (req, res) => {
+    try {
+        const jobs = await Job.find({ status: 'Active', jobType: "Part Time" })
+            //.sort({  }) // Sort by published date in descending order
+            .limit(6)
+            .populate({
+                path: "company",
+                populate: {
+                    path: "User",
+                }
+            }); // Limit the results to 6 jobs
+        res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

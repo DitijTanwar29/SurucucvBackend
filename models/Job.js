@@ -65,7 +65,9 @@ const jobSchema = new mongoose.Schema({
         type: String,
         enum: ["Hourly","Weekly","Monthly","Yearly"],
     },
-
+    publishedDate: {
+        tyoe: Date,
+    },
 
     //requirements for job creation 
     // Main Certificates
