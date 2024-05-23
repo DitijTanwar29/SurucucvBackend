@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const otpGenerator = require("otp-generator")
 
 const User = require("../models/User");
 const CandidateProfile = require("../models/CandidateProfile");
@@ -9,7 +10,7 @@ const AdminProfile = require("../models/AdminProfile");
 
 const OTP = require('../models/OTP');
 const { sendSMS } = require('../models/Twilio');
-
+const twilio = require('twilio');
 exports.sendSms = async ( req, res) => {
    const { mobileNumber } = req.body;
 
@@ -35,6 +36,226 @@ exports.sendSms = async ( req, res) => {
   }
 }
 
+// exports.sendotp = async (req, res) => {
+//    try {
+//      const { email, contactNumber } = req.body;
+ 
+//      // Check if user is already present for Company account type
+//      const checkCompanyUserPresent = await User.findOne({ email, accountType: "Company" });
+//      if (checkCompanyUserPresent) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Company user is Already Registered`,
+//        });
+//      }
+ 
+//      // Check if user is already present for Candidate account type
+//      const checkCandidateUserPresent = await User.findOne({ contactNumber, accountType: "Candidate" });
+//      if (checkCandidateUserPresent) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Candidate user is Already Registered`,
+//        });
+//      }
+ 
+//      // Generate OTP
+//      const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
+ 
+//      // Save OTP for Company user
+//      if (checkCompanyUserPresent) {
+//        await OTP.create({ email, otp });
+//      }
+ 
+//      // Save OTP for Candidate user
+//      if (checkCandidateUserPresent) {
+//        await OTP.create({ mobileNumber: contactNumber, otp });
+//      }
+ 
+//      res.status(200).json({
+//        success: true,
+//        message: `OTP Sent Successfully`,
+//        otp,
+//      });
+//    } catch (error) {
+//      console.log(error.message);
+//      return res.status(500).json({ success: false, error: error.message });
+//    }
+//  };
+ 
+// signup controller
+// exports.signup = async (req, res) => {
+//    try {
+//      const { name, email, password, confirmPassword, contactNumber, date, city, accountType, otp } = req.body;
+ 
+//      // Validate data
+//      if (!name || !email || !contactNumber || !date || !city || !password || !confirmPassword || !accountType || !otp) {
+//        return res.status(403).json({
+//          success: false,
+//          message: "All fields are required",
+//        });
+//      }
+ 
+//      // Match passwords
+//      if (password !== confirmPassword) {
+//        return res.status(400).json({
+//          success: false,
+//          message: "Password and ConfirmPassword value does not match, please try again",
+//        });
+//      }
+ 
+//      // Check if user is already registered for Company account type
+//      const checkCompanyUserPresent = await User.findOne({ email, accountType: "Company" });
+//      if (checkCompanyUserPresent) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Company user is Already Registered`,
+//        });
+//      }
+ 
+//      // Check if user is already registered for Candidate account type
+//      const checkCandidateUserPresent = await User.findOne({ contactNumber, accountType: "Candidate" });
+//      if (checkCandidateUserPresent) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Candidate user is Already Registered`,
+//        });
+//      }
+ 
+//      // Verify OTP
+//      const verifiedOTP = await OTP.findOne({ mobileNumber: contactNumber, otp });
+//      if (!verifiedOTP) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Invalid OTP. Please enter the correct OTP.`,
+//        });
+//      }
+ 
+//      // Hash Password
+//      const hashedPassword = await bcrypt.hash(password, 10);
+ 
+//      // Create additional profile for User
+//      let companyProfileDetails = {};
+//      let candidateProfileDetails = {};
+ 
+//      switch(accountType) {
+//        case 'Company':
+//          companyProfileDetails = await CompanyProfile.findOne({ email: null });
+//          if (!companyProfileDetails) {
+//            companyProfileDetails = await CompanyProfile.create({
+//              email: null, name: null, contactNumber: null, position: null,
+//              dateOfBirth: null, companyTitle: null, industryName: null,
+//              taxAdministration: null, taxNumber: null, companyAddress: null,
+//              companyIcon: null, companyBackgroundIcon: null,
+//            });
+//          }
+//          break;
+//        case 'Candidate':
+//          candidateProfileDetails = await CandidateProfile.findOne({ email: null });
+//          if (!candidateProfileDetails) {
+//            candidateProfileDetails = await CandidateProfile.create({
+//              name: null, email: null, about: null, contactNumber: null,
+//              skill: null, city: null, PreferJobLocation: null, degree: null,
+//            });
+//          }
+//          break;
+//        default:
+//          // Handle other account types if needed
+//          break;
+//      }
+ 
+//      // Create the user
+//      const user = await User.create({
+//        name,
+//        email,
+//        date,
+//        contactNumber,
+//        password: hashedPassword,
+//        accountType,
+//        adminDetails: null,
+//        candidateDetails: candidateProfileDetails._id,
+//        companyDetails: companyProfileDetails._id,
+//        image: "",
+//      });
+ 
+//      // Return response
+//      return res.status(200).json({
+//        success: true,
+//        user,
+//        message: 'User is registered Successfully',
+//      });
+//    } catch(error) {
+//      console.log(error);
+//      return res.status(500).json({
+//        success: false,
+//        message: "User cannot be registered. Please try again.",
+//      });
+//    }
+//  };
+ 
+ // sendotp controller
+//  exports.sendotp = async (req, res) => {
+//    try {
+//      const { email, contactNumber } = req.body;
+ 
+//      // Check if user is already present for Company account type
+//      const checkCompanyUserPresent = await User.findOne({ email, accountType: "Company" });
+//      if (checkCompanyUserPresent) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Company user is Already Registered`,
+//        });
+//      }
+ 
+//      // Check if user is already present for Candidate account type
+//      const checkCandidateUserPresent = await User.findOne({ contactNumber, accountType: "Candidate" });
+//      if (checkCandidateUserPresent) {
+//        return res.status(401).json({
+//          success: false,
+//          message: `Candidate user is Already Registered`,
+//        });
+//      }
+ 
+//      // Generate OTP
+//      const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
+ 
+//      // Save OTP for Company user
+//      if (checkCompanyUserPresent) {
+//        await OTP.create({ email, otp });
+//      }
+ 
+//      // Save OTP for Candidate user
+//      if (checkCandidateUserPresent) {
+//        await OTP.create({ mobileNumber: contactNumber, otp });
+//      }
+ 
+//      res.status(200).json({
+//        success: true,
+//        message: `OTP Sent Successfully`,
+//        otp,
+//      });
+//    } catch (error) {
+//      console.log(error.message);
+//      return res.status(500).json({ success: false, error: error.message });
+//    }
+//  };
+//  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+//  const authToken = process.env.TWILIO_AUTH_TOKEN;
+//  const client = twilio(accountSid, authToken);
+
+ exports.testotp = async (req,res) => {
+
+  const accountSid = 'AC00abbd8f74734ee9164062d909eb4de1';
+const authToken = 'e2929348cbc83182e7b5363ceda055dc';
+const client = require('twilio')(accountSid, authToken);
+
+client.verify.v2.services("VA39379feb8ab2c04845dc3082e34a9f6a")
+      .verifications
+      .create({to: '+905323047271', channel: 'sms', body:"Hello how are you"})
+      .then(verification => console.log(verification.status));
+
+}
+
+// original signup code is here 
 exports.signup = async(req, res)=>{
    try{
          //fetching data
@@ -45,7 +266,8 @@ exports.signup = async(req, res)=>{
                contactNumber,
                date,
                city,
-               accountType
+               accountType,
+               otp,
             } = req.body.email;
 
             console.log("request", req);
@@ -53,7 +275,7 @@ exports.signup = async(req, res)=>{
 
             console.log("Reqyest.body.email: ",req.body.email);
          //validate data
-         if(!name || !email || !contactNumber || !date || !city || !password || !confirmPassword || !accountType){
+         if(!name || !email || !contactNumber || !date || !city || !password || !confirmPassword || !accountType || !otp){
             return res.status(403).json({
                success:false,
                message:"All fields are required",
@@ -79,10 +301,24 @@ exports.signup = async(req, res)=>{
 
         //ToDo: otp model and further code below
         //find most recent  OTP stored for the user 
-      //   const recentOtp = await OTP.find({phone}).sort({ createdAt: -1 }).limit(1);
-      //   console.log(recentOtp);
-
-      //validate OTP
+        const response = await OTP.find({email}).sort({ createdAt: -1 }).limit(1);
+        console.log(response);
+        // validate OTP
+        if(recentOtp.length === 0) {
+          //OTP not found
+          return res.status(400).json({
+              success:false,
+              message:"OTP Not Found",
+          })
+      }
+      else if(otp !== recentOtp[0].otp) {
+          //Invalid Otp
+          return res.status(400).json({
+              success:false,
+              message:"Invalid OTP",
+          });
+      }
+    
       
 
         //Hash Password
@@ -157,6 +393,54 @@ exports.signup = async(req, res)=>{
    }
 
 }
+
+exports.sendotp = async (req, res) => {
+  try {
+    const { email } = req.body
+
+    // Check if user is already present
+    // Find user with provided email
+    const checkUserPresent = await User.findOne({ email })
+    // to be used in case of signup
+
+    // If user found with provided email
+    if (checkUserPresent) {
+      // Return 401 Unauthorized status code with error message
+      return res.status(401).json({
+        success: false,
+        message: `User is Already Registered`,
+      })
+    }
+
+    var otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+    })
+    const result = await OTP.findOne({ otp: otp })
+    console.log("Result is Generate OTP Func")
+    console.log("OTP", otp)
+    console.log("Result", result)
+    while (result) {
+      otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+      })
+    }
+    const otpPayload = { email, otp }
+    const otpBody = await OTP.create(otpPayload)
+    console.log("OTP Body", otpBody)
+    res.status(200).json({
+      success: true,
+      message: `OTP Sent Successfully`,
+      otp,
+    })
+  } catch (error) {
+    console.log(error.message)
+    return res.status(500).json({ success: false, error: error.message })
+  }
+}
+
+
 
 //Login
 exports.login = async (req, res) => {

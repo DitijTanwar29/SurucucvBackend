@@ -739,3 +739,84 @@ exports.getPartTimeJobs = async (req, res) => {
     }
 };
 
+// exports.getJobLocationsWithMaxJobs = async (req,res) => {
+//     try{
+//         const topLocations = await Job.aggregate([
+//             {
+//                 $group : {
+
+//                 }
+//             }
+//         ])
+//     }catch(error){
+
+//     }
+// }
+
+
+exports.getTopJobLocations = async (req, res) => {
+    // try {
+    //   const topLocations = await Job.aggregate([
+    //     {
+    //       $group: {
+    //         _id: "$jobLocation",
+    //         jobCount: { $sum: 1 },
+    //         jobs: { $push: "$_id" }
+    //       }
+    //     },
+    //     {
+    //       $sort: { jobCount: -1 }
+    //     },
+    //     {
+    //       $limit: 5
+    //     }
+    //   ]);
+    //   console.log("top locations data is here :", topLocations)
+  
+    //   res.status(200).json({
+    //     success: true,
+    //     data: topLocations
+    //   });
+    // } catch (error) {
+    //   console.error('Error fetching top job locations:', error.message);
+    //   res.status(500).json({
+    //     success: false,
+    //     message: 'Failed to fetch top job locations',
+    //     error: error.message
+    //   });
+    // }
+
+
+    try {
+        const topLocations = await Job.aggregate([
+          // Group by jobLocation and count the number of jobs for each location
+          {
+            $group: {
+              _id: "$jobLocation",
+              jobCount: { $sum: 1 },
+            jobs: { $push: "$_id" }
+              
+            },
+          },
+          // Sort by jobCount in descending order
+          {
+            $sort: { jobCount: -1 },
+          },
+          // Limit to the top 5 locations
+          {
+            $limit: 5,
+          },
+        ]);
+    
+        res.status(200).json({
+          success: true,
+          data: topLocations,
+        });
+      } catch (error) {
+        console.error("Error fetching top job locations:", error.message);
+        res.status(500).json({
+          success: false,
+          message: "Server Error",
+        });
+      }
+  };
