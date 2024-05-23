@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 // importing the required controllers and middlewares
-const {login,testotp, signup, sendotp, changePassword, sendSms} = require("../controllers/Auth");
+const {login, signup, sendotp, changePassword, sendSms} = require("../controllers/Auth");
  
 
 //routes for login signup changePassword
@@ -14,5 +14,5 @@ router.post('/signup',signup);
 router.post("/login", login);
 
 router.post("/sendotp", sendotp);
-router.get("/testotp", testotp );
+// router.get("/testotp", testotp );
 module.exports = router;
