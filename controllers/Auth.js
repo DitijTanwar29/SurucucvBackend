@@ -242,18 +242,18 @@ exports.sendSms = async ( req, res) => {
 //  const authToken = process.env.TWILIO_AUTH_TOKEN;
 //  const client = twilio(accountSid, authToken);
 
- exports.testotp = async (req,res) => {
+//  exports.testotp = async (req,res) => {
 
-  const accountSid = 'AC00abbd8f74734ee9164062d909eb4de1';
-const authToken = 'e2929348cbc83182e7b5363ceda055dc';
-const client = require('twilio')(accountSid, authToken);
+//   const accountSid = 'AC00abbd8f74734ee9164062d909eb4de1';
+// const authToken = 'e2929348cbc83182e7b5363ceda055dc';
+// const client = require('twilio')(accountSid, authToken);
 
-client.verify.v2.services("VA39379feb8ab2c04845dc3082e34a9f6a")
-      .verifications
-      .create({to: '+905323047271', channel: 'sms', body:"Hello how are you"})
-      .then(verification => console.log(verification.status));
+// client.verify.v2.services("VA39379feb8ab2c04845dc3082e34a9f6a")
+//       .verifications
+//       .create({to: '+905323047271', channel: 'sms', body:"Hello how are you"})
+//       .then(verification => console.log(verification.status));
 
-}
+// }
 
 // original signup code is here 
 exports.signup = async(req, res)=>{
