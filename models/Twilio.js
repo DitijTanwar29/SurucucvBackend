@@ -47,9 +47,4 @@ module.exports = { sendSMS };
 
 
 
-// const accountSid = "AC369c4f3e222eb26ec8fd7760a457a7a9";
-//   const authToken = "5b96040db1d2ef642bdfe700cab322c7";
-//   const verifySid = "VAd3e9917781de06266429970bc2e8f0c7";
-//   const client = require("twilio")(accountSid, authToken);
-
  
