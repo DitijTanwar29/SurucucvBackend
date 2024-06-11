@@ -11,8 +11,8 @@ exports.updateCandidateProfile = async (req,res) => {
             about="", skills="", preferedJobLocation, 
             degree, province, district
             } = req.body;
-        const profileImage  = req.files.profileImage;
-        const backgroundImage  =req.files.backgroundImage;
+        // const profileImage  = req.files.profileImage;
+        // const backgroundImage  =req.files.backgroundImage;
 
         // get userId
         const id = req.user.id;
@@ -30,26 +30,36 @@ exports.updateCandidateProfile = async (req,res) => {
         const profileId = userDetails.candidateDetails;
         const candidateProfileDetails = await CandidateProfile.findById(profileId);
 
+        const accountType = userDetails.accountType
+        console.log("accountType : ",accountType)
+        const user = await User.findByIdAndUpdate(id, {
+          name,
+          email, contactNumber,
+          accountType
+        })
+
+        await user.save()
+console.log("user :",user)
 
         //upload profile pic
-        const profilePic = await uploadImageToCloudinary(
-            profileImage,
-            process.env.FOLDER_NAME,
-            1000,
-            1000
-        )
-        console.log(profilePic);
+        // const profilePic = await uploadImageToCloudinary(
+        //     profileImage,
+        //     process.env.FOLDER_NAME,
+        //     1000,
+        //     1000
+        // )
+        // console.log(profilePic);
         //upload cover pic 
-        const coverPic = await uploadImageToCloudinary(
-            backgroundImage,
-            process.env.FOLDER_NAME,
-            1000,
-            1000
-        )
-        console.log(coverPic);
+        // const coverPic = await uploadImageToCloudinary(
+        //     backgroundImage,
+        //     process.env.FOLDER_NAME,
+        //     1000,
+        //     1000
+        // )
+        // console.log(coverPic);
 
 
-        //update Admin Profile 
+        //update Candidate Profile 
         candidateProfileDetails.name = name;
         candidateProfileDetails.email = email;
         candidateProfileDetails.contactNumber = contactNumber;
@@ -61,16 +71,20 @@ exports.updateCandidateProfile = async (req,res) => {
         candidateProfileDetails.preferedJobLocation = preferedJobLocation;
         candidateProfileDetails.degree = degree;
 
-        candidateProfileDetails.profileImage = profilePic.secure_url;
-        candidateProfileDetails.backgroundImage = coverPic.secure_url;
+        // candidateProfileDetails.profileImage = profilePic.secure_url;
+        // candidateProfileDetails.backgroundImage = coverPic.secure_url;
 
         await candidateProfileDetails.save();
         
+        //Find the updated user details
+        const updatedUserDetails = await User.findById(id)
+        .populate("candidateDetails")
+        .exec()
         //return response
         return res.status(200).json({
             success: true,
             message:'Candidate Profile Updated Successfully',
-            candidateProfileDetails,
+            updatedUserDetails,
         })
 
     }catch(error){

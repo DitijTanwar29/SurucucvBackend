@@ -10,7 +10,7 @@ exports.createResume = async(req,res) => {
         //fetch data
         let {
             tcNumber, firstName="",lastName="", age,gsm,city,state,
-            licenseType="",isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicense,
+            licenseType=[],isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicense,
             passport,dateOfReceipt,duration,visa,abroadExperience,
             isBlindSpotTraining,isSafeDrivingTraining,isFuelEconomyTraining,isCode95Document,
             europeanExperiencePeriod,
@@ -21,14 +21,14 @@ exports.createResume = async(req,res) => {
 
         console.log("tcNumber",tcNumber);
         // console.log("country",country);
-        console.log("licenceType",licenseType);
+        console.log("licenseType",licenseType);
 
         //validation
         if(
-            !tcNumber ||
-            !firstName ||
-            !lastName ||
-            !licenseType ||
+            // !tcNumber ||
+            // !firstName ||
+            // !lastName ||
+            // !licenseType ||
             !userId
         ) {
             return res.status(400).json({
@@ -36,6 +36,14 @@ exports.createResume = async(req,res) => {
                 message:'All fields are required',
             });
         }
+
+        // // Validate licenseType array
+        // if (licenseType.some(license => license === "")) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'License type cannot contain empty values',
+        //     });
+        // }
 
         //check for candidate
         const candidateDetails = await User.findById(userId);
@@ -71,9 +79,9 @@ exports.createResume = async(req,res) => {
             visa: visa,
             abroadExperience: abroadExperience,
             isCode95Document : isCode95Document,
-            isblindSpotTraining: isBlindSpotTraining,
-            issafeDrivingTraining: isSafeDrivingTraining,
-            isfuelEconomyTraining: isFuelEconomyTraining,
+            isBlindSpotTraining: isBlindSpotTraining,
+            isSafeDrivingTraining: isSafeDrivingTraining,
+            isFuelEconomyTraining: isFuelEconomyTraining,
             europeanExperiencePeriod:europeanExperiencePeriod,
             russiaExperiencePeriod :russiaExperiencePeriod,
             turkicRepublicsExperiencePeriod : turkicRepublicsExperiencePeriod,
@@ -114,9 +122,9 @@ exports.getResumeDetails = async (req, res) => {
         //get id
         // const {resumeId} = req.body;
         //find resume details
-        const resumeDetails = await Resume.find({})
-                                                .exec();
-
+        // const resumeDetails = await Resume.find({})
+        //                                         .exec();
+        const resumeDetails = await Resume.findOne().sort({ createdAt: -1 }).exec();
         console.log("Resume Details : ",resumeDetails);
         //validation
         if(!resumeDetails) {

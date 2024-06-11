@@ -820,3 +820,112 @@ exports.getTopJobLocations = async (req, res) => {
         });
       }
   };
+
+exports.filterJobs = async (req, res) => {
+
+//   const { country, city, district, studyPreference, dateRange, salaryType } = req.query;
+//   let filter = {};
+
+//   if (country) filter.country = country;
+//   if (city) filter.city = city;
+//   if (district) filter.district = district;
+//   if (studyPreference) filter.studyPreference = studyPreference;
+//   if (salaryType) filter.salaryType = salaryType;
+//   if (dateRange) {
+//     const now = new Date();
+//     switch (dateRange) {
+//       case 'today':
+//         filter.createdAt = { $gte: new Date(now.setHours(0, 0, 0, 0)) };
+//         break;
+//       case '3hours':
+//         filter.createdAt = { $gte: new Date(now.setHours(now.getHours() - 3)) };
+//         break;
+//       case '8hours':
+//         filter.createdAt = { $gte: new Date(now.setHours(now.getHours() - 8)) };
+//         break;
+//       case '3days':
+//         filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 3)) };
+//         break;
+//       case '7days':
+//         filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 7)) };
+//         break;
+//       case '15days':
+//         filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 15)) };
+//         break;
+//       default:
+//         break;
+//     }
+//   }
+
+//   try {
+//     const jobs = await Job.find(filter);
+//     res.status(200).json(jobs);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error });
+//   }
+
+try {
+    const query = {};
+
+    // Construct query based on request parameters
+    if (req.query.jobTitle) {
+      query.jobTitle = { $in: Array.isArray(req.query.jobTitle) ? req.query.jobTitle : [req.query.jobTitle] };
+    }
+    if (req.query.companyName) {
+      query.companyName = { $in: Array.isArray(req.query.companyName) ? req.query.companyName : [req.query.companyName] };
+    }
+    if (req.query.jobType) {
+      query.jobType = { $in: Array.isArray(req.query.jobType) ? req.query.jobType : [req.query.jobType] };
+    }
+    if (req.query.salaryType) {
+      query.salaryType = { $in: Array.isArray(req.query.salaryType) ? req.query.salaryType : [req.query.salaryType] };
+    }
+    if (req.query.requiredSkills) {
+      query.requiredSkills = { $all: req.query.requiredSkills.split(',') };
+    }
+    if (req.query.jobLocation) {
+      query.jobLocation = { $in: Array.isArray(req.query.jobLocation) ? req.query.jobLocation : [req.query.jobLocation] };
+    }
+    if (req.query.publishedDate) {
+      const publishedDate = JSON.parse(req.query.publishedDate);
+      query.publishedDate = {};
+      if (publishedDate.$gte) query.publishedDate.$gte = new Date(publishedDate.$gte);
+      if (publishedDate.$lte) query.publishedDate.$lte = new Date(publishedDate.$lte);
+    }
+    if (req.query.licenseType) {
+      query.licenseType = { $in: Array.isArray(req.query.licenseType) ? req.query.licenseType : [req.query.licenseType] };
+    }
+    if (req.query.passport) {
+      query.passport = { $in: Array.isArray(req.query.passport) ? req.query.passport : [req.query.passport] };
+    }
+    if (req.query.visa) {
+      query.visa = { $in: Array.isArray(req.query.visa) ? req.query.visa : [req.query.visa] };
+    }
+    if (req.query.abroadExperience) {
+      query.abroadExperience = { $gte: Number(req.query.abroadExperience) };
+    }
+    if (req.query.isBlindSpotTraining) {
+      query.isBlindSpotTraining = req.query.isBlindSpotTraining === 'true';
+    }
+    if (req.query.isSafeDrivingTraining) {
+      query.isSafeDrivingTraining = req.query.isSafeDrivingTraining === 'true';
+    }
+    if (req.query.isFuelEconomyTraining) {
+      query.isFuelEconomyTraining = req.query.isFuelEconomyTraining === 'true';
+    }
+
+    // Ensure at least one filter is applied
+    if (Object.keys(query).length === 0) {
+      return res.status(400).json({ message: 'No filter applied' });
+    }
+
+    console.log('Constructed Query:', JSON.stringify(query, null, 2));
+
+    const jobs = await Job.find(query).sort({ publishedDate: -1 }); // Sort by publishedDate in descending order
+
+    res.status(200).json(jobs);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};

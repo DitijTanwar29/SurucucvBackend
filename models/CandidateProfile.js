@@ -28,7 +28,7 @@ const candidateProfileSchema = new mongoose.Schema({
     district: {
         type: String,
     },
-    preferJobLocation : {
+    preferedJobLocation : {
         type: [String],
     },
     degree: {

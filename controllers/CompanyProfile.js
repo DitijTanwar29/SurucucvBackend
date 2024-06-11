@@ -30,6 +30,17 @@ exports.updateCompanyProfile = async (req, res) => {
 
         console.log("userDetails",userDetails);
 
+        const accountType = userDetails.accountType
+        console.log("accountType : ",accountType)
+        const user = await User.findByIdAndUpdate(id, {
+          name,
+          email, contactNumber,
+          companyTitle,
+          accountType
+        })
+
+        await user.save()
+console.log("user :",user)
         //upload profile pic
         // const profilePic = await uploadImageToCloudinary(
         //     profileImage,
@@ -66,10 +77,14 @@ exports.updateCompanyProfile = async (req, res) => {
 
         await companyProfileDetails.save();
 
+        //Find the updated user details
+        const updatedUserDetails = await User.findById(id)
+        .populate("companyDetails")
+        .exec()
         //return response
         return res.status(200).json({
             success: true,
-            companyProfileDetails,
+            updatedUserDetails,
             message:'Company Profile Updated Successfully',
         })
     }catch(error){

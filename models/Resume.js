@@ -30,8 +30,10 @@ const resumeSchema = new mongoose.Schema({
 
     // Main Certificates
     licenseType: {
-        type: String,
-        enum:["Type 1","Type 2","Type 3"],
+        type: Array,
+        // enum: [
+        //     'M', 'A1', 'A2', 'A', 'B1', 'B', 'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE', 'F', 'G'
+        // ],
     },
     isSrc1: {
         type: Boolean,
@@ -68,8 +70,7 @@ const resumeSchema = new mongoose.Schema({
         default: Date.now(),
     },
     duration: {
-        type: Date,
-        default: Date.now(),
+        type: Number,
     },
     visa: {
         type: String,
@@ -90,7 +91,7 @@ const resumeSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    isFuelDrivingTrainiing: {
+    isFuelEconomyTraining: {
         type: Boolean,
         default: false,
     },
@@ -106,6 +107,10 @@ const resumeSchema = new mongoose.Schema({
     },
     southExperienceTime: {
         type: Number,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now()
     }
 
     

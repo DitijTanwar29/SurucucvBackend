@@ -28,7 +28,17 @@ exports.updateAdminProfile = async (req,res) => {
         const profileId = userDetails.adminDetails;
         const adminProfileDetails = await AdminProfile.findById(profileId);
 
+        const accountType = userDetails.accountType
+        console.log("accountType : ",accountType)
+        const user = await User.findByIdAndUpdate(id, {
+          firstName,
+          middleName,
+          lastName,
+          accountType
+        })
 
+        await user.save()
+console.log("user :",user)
         //upload profile pic
         // const profilePic = await uploadImageToCloudinary(
         //     profileImage,
@@ -59,11 +69,16 @@ exports.updateAdminProfile = async (req,res) => {
 
         await adminProfileDetails.save();
         
+        //Find the updated user details
+        const updatedUserDetails = await User.findById(id)
+        .populate("adminDetails")
+        .exec()
+
         //return response
         return res.status(200).json({
             success: true,
             message:'Admin Profile Updated Successfully',
-            adminProfileDetails,
+            updatedUserDetails,
         })
 
     }catch(error){

@@ -261,12 +261,14 @@ exports.signup = async(req, res)=>{
                otp,
             } = req.body.email;
 
-            console.log("request", req);
+            // console.log("request", req);
             console.log("req.body : ",req.body)
 
             console.log("Reqyest.body.email: ",req.body.email);
          //validate data
-         if(!name || !email || !contactNumber || !date || !city || !password || !confirmPassword || !accountType || !otp){
+         if(!name || !email || !contactNumber || !date 
+            || !city || !password || !confirmPassword ||
+             !accountType || !otp){
             return res.status(403).json({
                success:false,
                message:"All fields are required",
@@ -409,12 +411,14 @@ exports.sendotp = async (req, res) => {
       specialChars: false,
     })
     const result = await OTP.findOne({ otp: otp })
-    console.log("Result is Generate OTP Func")
+    console.log("Result in Generate OTP Func")
     console.log("OTP", otp)
     console.log("Result", result)
     while (result) {
       otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
       })
     }
     const otpPayload = { email, otp }
