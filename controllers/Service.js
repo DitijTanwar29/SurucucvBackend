@@ -64,18 +64,19 @@ exports.createService = async(req,res) => {
             icon: serviceIcon.secure_url,
             status: status,
             sector:sector,
-        });
+        })
+        
 
         //add the service to the admin schema 
-        await User.findByIdAndUpdate(
-            {_id: adminDetails._id},
-            {
-                $push: {
-                    services: newService._id,
-                }
-            },
-            {new:true},
-        );
+        // await User.findByIdAndUpdate(
+        //     {_id: adminDetails._id},
+        //     {
+        //         $push: {
+        //             services: newService._id,
+        //         }
+        //     },
+        //     {new:true},
+        // );
 
 
         //return response
@@ -161,6 +162,7 @@ exports.showAllServices = async (req, res) => {
                                                     serviceDescription:true,
                                                     icon:true,
                                                     status:true,
+                                                    sector:true,
                                                 }).exec();
                                     
         return res.status(200).json({

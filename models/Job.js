@@ -72,8 +72,8 @@ const jobSchema = new mongoose.Schema({
     //requirements for job creation 
     // Main Certificates
     licenseType: {
-        type: String,
-        enum:["Type 1","Type 2","Type 3"],
+        type: Array,
+        
     },
     // srcBox:{
     //     type: String,

@@ -12,7 +12,7 @@ exports.createJob = async (req, res) => {
             title, description, service, skills, requiredExperience, 
             location,companyName, salaryRange, salaryType, 
             vacancy, startDate, endDate, jobType, status,
-            licenseType,srcBox,isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicence,
+            licenseType="",srcBox,isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicence,
             passport,visa,abroadExperience,
             isBlindSpotTraining,isSafeDrivingTraining,isFuelEconomyTraining
         } = req.body;
@@ -922,8 +922,13 @@ try {
     console.log('Constructed Query:', JSON.stringify(query, null, 2));
 
     const jobs = await Job.find(query).sort({ publishedDate: -1 }); // Sort by publishedDate in descending order
-
+    console.log("fetched filtered jobs : ",jobs)
     res.status(200).json(jobs);
+    // res.status(200).json({
+    //     success:true,
+    //     message:"Filtered jobs fetched successfully!",
+    //     data:jobs,
+    // })
   } catch (error) {
     console.error('Error fetching jobs:', error);
     res.status(500).json({ message: 'Server error', error });
