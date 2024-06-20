@@ -893,7 +893,8 @@ try {
       if (publishedDate.$lte) query.publishedDate.$lte = new Date(publishedDate.$lte);
     }
     if (req.query.licenseType) {
-      query.licenseType = { $in: Array.isArray(req.query.licenseType) ? req.query.licenseType : [req.query.licenseType] };
+      const licenseTypes = Array.isArray(req.query.licenseType) ? req.query.licenseType : [req.query.licenseType];
+      query.licenseType = { $regex: licenseTypes.map(type => `(?=.*${type})`).join(''), $options: 'i' };
     }
     if (req.query.passport) {
       query.passport = { $in: Array.isArray(req.query.passport) ? req.query.passport : [req.query.passport] };
@@ -922,15 +923,16 @@ try {
     console.log('Constructed Query:', JSON.stringify(query, null, 2));
 
     const jobs = await Job.find(query).sort({ publishedDate: -1 }); // Sort by publishedDate in descending order
-    console.log("fetched filtered jobs : ",jobs)
-    res.status(200).json(jobs);
-    // res.status(200).json({
-    //     success:true,
-    //     message:"Filtered jobs fetched successfully!",
-    //     data:jobs,
-    // })
+    console.log("fetched filtered jobs: ", jobs);
+    res.status(200).json({
+      success: true,
+      message: "Filtered jobs fetched successfully!",
+      data: jobs,
+    });
   } catch (error) {
     console.error('Error fetching jobs:', error);
     res.status(500).json({ message: 'Server error', error });
   }
+
+
 };
