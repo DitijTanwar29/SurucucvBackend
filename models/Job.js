@@ -68,7 +68,10 @@ const jobSchema = new mongoose.Schema({
     publishedDate: {
         type: Date,
     },
-
+    isInternationalJob: {
+        type: Boolean,
+        default: false,
+    },
     //requirements for job creation 
     // Main Certificates
     licenseType: {
