@@ -193,7 +193,7 @@ exports.updateJob = async (req, res) => {
 exports.showAllJobs = async (req, res) => {
     try{
 
-        const allJobs = await Job.find({})
+        const allJobs = await Job.find({}).sort({ publishedDate: -1 })
                                                 .populate({
                                                     path: "company",
                                                     populate: {

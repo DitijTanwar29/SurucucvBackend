@@ -59,7 +59,14 @@ const resumeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
-
+    adrExpiryDate: {
+        type : Date,
+        default: null,
+    },
+    psikoteknikExpiryDate: {
+        type: Date,
+        default: null,
+    },
     // Abilities
     passport: {
         type: String,

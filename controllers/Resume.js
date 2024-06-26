@@ -2,91 +2,202 @@ const Candidate = require("../models/CandidateProfile");
 const User = require("../models/User");
 const Resume = require("../models/Resume");
 
-exports.createResume = async(req,res) => {
-    try{
+// exports.createResume = async(req,res) => {
+//     try{
+//         //get userId from request object
+//         const userId = req.user.id;
+//         const email = req.user.email;
+//         //fetch data
+//         let {
+//             tcNumber, firstName="",lastName="", age,gsm,city,state,
+//             licenseType=[],isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicense,
+//             passport,dateOfReceipt,duration,visa,abroadExperience,
+//             isBlindSpotTraining,isSafeDrivingTraining,isFuelEconomyTraining,isCode95Document,
+//             europeanExperiencePeriod,
+//             russiaExperiencePeriod,
+//             turkicRepublicsExperiencePeriod,
+//             southExperienceTime
+//         } = req.body;
+           
+//         console.log("tcNumber",tcNumber);
+//         // console.log("country",country);
+//         console.log("licenseType",licenseType);
+
+//         //validation
+//         if(
+//             // !tcNumber ||
+//             // !firstName ||
+//             // !lastName ||
+//             // !licenseType ||
+//             !userId
+//         ) {
+//             return res.status(400).json({
+//                 success:false,
+//                 message:'All fields are required',
+//             });
+//         }
+
+//         // // Validate licenseType array
+//         // if (licenseType.some(license => license === "")) {
+//         //     return res.status(400).json({
+//         //         success: false,
+//         //         message: 'License type cannot contain empty values',
+//         //     });
+//         // }
+
+//         //check for candidate
+//         const candidateDetails = await User.findById(userId);
+//         console.log("candidate details: ", candidateDetails);
+
+//         if(!candidateDetails){
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Candidate details not found",
+//             });
+//         }
+
+//         //create a resume for the user 
+//         const resume = await Resume.create({
+//             firstName:firstName, 
+//             lastName:lastName,
+//             email,
+//             tcNumber: tcNumber,
+//             age: age,
+//             gsm: gsm,
+//             city: city,
+//             state: state,
+//             licenseType:licenseType,
+//             isSrc1: isSrc1,
+//             isSrc2: isSrc2,
+//             isSrc3: isSrc3,
+//             isSrc4: isSrc4,
+//             psikoteknik: psikoteknik,
+//             adrDriverLicense: adrDriverLicense,
+//             passport: passport,
+//             dateOfReceipt: dateOfReceipt,
+//             duration: duration,
+//             visa: visa,
+//             abroadExperience: abroadExperience,
+//             isCode95Document : isCode95Document,
+//             isBlindSpotTraining: isBlindSpotTraining,
+//             isSafeDrivingTraining: isSafeDrivingTraining,
+//             isFuelEconomyTraining: isFuelEconomyTraining,
+//             europeanExperiencePeriod:europeanExperiencePeriod,
+//             russiaExperiencePeriod :russiaExperiencePeriod,
+//             turkicRepublicsExperiencePeriod : turkicRepublicsExperiencePeriod,
+//             southExperienceTime :southExperienceTime,
+//         })
+        
+//         //add the resume to the candidate schema
+//         await User.findByIdAndUpdate(
+//             {_id: candidateDetails._id},
+//             {
+//                 $push: {
+//                     resume: resume._id,
+//                 }
+//             },
+//             {new: true},
+//         );
+
+//         //return response
+//         return res.status(200).json({
+//             success:true,
+//             message:'Resume created successfully',
+//             data:resume,
+//         });
+//     }catch(error){
+//         console.error(error);
+//         return res.status(500).json({
+//             success:false,
+//             message:'Failed to create resume',
+//             error:error.message,
+//         })
+//     }
+// };
+
+exports.createResume = async(req, res) => {
+    try {
         //get userId from request object
         const userId = req.user.id;
         const email = req.user.email;
+        
         //fetch data
         let {
-            tcNumber, firstName="",lastName="", age,gsm,city,state,
-            licenseType=[],isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicense,
-            passport,dateOfReceipt,duration,visa,abroadExperience,
-            isBlindSpotTraining,isSafeDrivingTraining,isFuelEconomyTraining,isCode95Document,
+            tcNumber, firstName = "", lastName = "", age, gsm, city, state,
+            licenseType = [], isSrc1, isSrc2, isSrc3, isSrc4, psikoteknik, adrDriverLicense,
+            passport, dateOfReceipt, duration, visa, abroadExperience,
+            isBlindSpotTraining, isSafeDrivingTraining, isFuelEconomyTraining, isCode95Document,
             europeanExperiencePeriod,
             russiaExperiencePeriod,
             turkicRepublicsExperiencePeriod,
             southExperienceTime
         } = req.body;
-
-        console.log("tcNumber",tcNumber);
-        // console.log("country",country);
-        console.log("licenseType",licenseType);
+        
+        console.log("tcNumber", tcNumber);
+        console.log("licenseType", licenseType);
 
         //validation
-        if(
-            // !tcNumber ||
-            // !firstName ||
-            // !lastName ||
-            // !licenseType ||
-            !userId
-        ) {
+        if (!userId) {
             return res.status(400).json({
-                success:false,
-                message:'All fields are required',
+                success: false,
+                message: 'All fields are required',
             });
         }
-
-        // // Validate licenseType array
-        // if (licenseType.some(license => license === "")) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'License type cannot contain empty values',
-        //     });
-        // }
 
         //check for candidate
         const candidateDetails = await User.findById(userId);
         console.log("candidate details: ", candidateDetails);
 
-        if(!candidateDetails){
+        if (!candidateDetails) {
             return res.status(404).json({
                 success: false,
                 message: "Candidate details not found",
             });
         }
 
+        // Adding 5 years to psikoteknik and adrDriverLicense dates
+        const addYears = (date, years) => {
+            let result = new Date(date);
+            result.setFullYear(result.getFullYear() + years);
+            return result;
+        };
+
+        const psikoteknikExpiryDate = psikoteknik ? addYears(psikoteknik, 5) : null;
+        const adrExpiryDate = adrDriverLicense ? addYears(adrDriverLicense, 5) : null;
+
         //create a resume for the user 
         const resume = await Resume.create({
-            firstName:firstName, 
-            lastName:lastName,
-            email,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
             tcNumber: tcNumber,
             age: age,
             gsm: gsm,
             city: city,
             state: state,
-            licenseType:licenseType,
+            licenseType: licenseType,
             isSrc1: isSrc1,
             isSrc2: isSrc2,
             isSrc3: isSrc3,
             isSrc4: isSrc4,
             psikoteknik: psikoteknik,
+            psikoteknikExpiryDate: psikoteknikExpiryDate,
             adrDriverLicense: adrDriverLicense,
+            adrExpiryDate: adrExpiryDate,
             passport: passport,
             dateOfReceipt: dateOfReceipt,
             duration: duration,
             visa: visa,
             abroadExperience: abroadExperience,
-            isCode95Document : isCode95Document,
+            isCode95Document: isCode95Document,
             isBlindSpotTraining: isBlindSpotTraining,
             isSafeDrivingTraining: isSafeDrivingTraining,
             isFuelEconomyTraining: isFuelEconomyTraining,
-            europeanExperiencePeriod:europeanExperiencePeriod,
-            russiaExperiencePeriod :russiaExperiencePeriod,
-            turkicRepublicsExperiencePeriod : turkicRepublicsExperiencePeriod,
-            southExperienceTime :southExperienceTime,
-        })
+            europeanExperiencePeriod: europeanExperiencePeriod,
+            russiaExperiencePeriod: russiaExperiencePeriod,
+            turkicRepublicsExperiencePeriod: turkicRepublicsExperiencePeriod,
+            southExperienceTime: southExperienceTime,
+        });
         
         //add the resume to the candidate schema
         await User.findByIdAndUpdate(
@@ -101,20 +212,19 @@ exports.createResume = async(req,res) => {
 
         //return response
         return res.status(200).json({
-            success:true,
-            message:'Resume created successfully',
-            data:resume,
+            success: true,
+            message: 'Resume created successfully',
+            data: resume,
         });
-    }catch(error){
+    } catch (error) {
         console.error(error);
         return res.status(500).json({
-            success:false,
-            message:'Failed to create resume',
-            error:error.message,
-        })
+            success: false,
+            message: 'Failed to create resume',
+            error: error.message,
+        });
     }
 };
-
 
 exports.getResumeDetails = async (req, res) => {
     try{

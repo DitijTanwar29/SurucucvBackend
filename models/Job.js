@@ -54,7 +54,7 @@ const jobSchema = new mongoose.Schema({
     },
     jobType: {
         type: String,
-        enum:["Full Time","Part Time","Internship"],
+        enum:["Full Time","Part Time","Internship","Temporary Job"],
     },
     status: {
         type: String,
@@ -63,7 +63,7 @@ const jobSchema = new mongoose.Schema({
     },
     salaryType: {
         type: String,
-        enum: ["Hourly","Weekly","Monthly","Yearly"],
+        enum: ["Daily","Weekly","Monthly","Yearly"],
     },
     publishedDate: {
         type: Date,
