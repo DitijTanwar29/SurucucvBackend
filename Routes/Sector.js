@@ -4,7 +4,7 @@ const router = express.Router();
 //importing the controllers
 
 //Service controllers Import
-const { createSector, editSector, deleteSector, showAllSectors, updateSectorStatus } = require("../controllers/Sector");
+const { createSector, editSector, deleteSector, showAllSectors, updateSectorStatus, getActiveSectors } = require("../controllers/Sector");
 
 
 
@@ -18,5 +18,6 @@ router.post("/editSector", auth, isAdmin, editSector);
 router.delete("/deleteSector", auth, isAdmin, deleteSector);
 router.get("/showAllSectors", showAllSectors);
 router.post("/updateSectorStatus", updateSectorStatus);
+router.get("/getActiveSectors",getActiveSectors);
 
 module.exports = router;

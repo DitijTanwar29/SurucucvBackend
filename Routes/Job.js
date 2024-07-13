@@ -9,7 +9,8 @@ const { createJob, showAllJobs, updateJob, deleteJob, getJobDetails, approveAJob
     getAllApprovedJobPosts, applyForJob, showAppliedJobs, showAppliedCandidates,
     getTopJobPostings, searchJobs, getRecentlyPublishedJobs,
     getFullTimeJobs, getPartTimeJobs, getTopJobLocations,
-    filterJobs, getInternationalJobs } = require("../controllers/Job");
+    filterJobs, getInternationalJobs,
+    getJobsBySector , getJobsByProvince, getJobsByService } = require("../controllers/Job");
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
@@ -38,4 +39,7 @@ router.get('/partTimeJobs', getPartTimeJobs);
 router.get('/topJobLocations',getTopJobLocations)
 router.get('/filterJobs', filterJobs)
 router.get('/internationalJobs', getInternationalJobs)
+router.get('/by-province', getJobsByProvince);
+router.get('/by-sector', getJobsBySector);
+router.get('/by-service', getJobsByService);
 module.exports = router;

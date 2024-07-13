@@ -24,8 +24,8 @@ const serviceSchema = new mongoose.Schema({
         }
     ],
     sector: {
-        type:String,
-        // ref: "Sector",
+        type:mongoose.Schema.Types.ObjectId,
+        ref: "Sector",
         required: true,
     }
     

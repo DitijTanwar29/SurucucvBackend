@@ -2,6 +2,8 @@ const Job = require("../models/Job");
 const User = require("../models/User");
 const Service = require("../models/Service");
 const mailSender = require("../utils/mailSender")
+const Sector = require("../models/Sector")
+const mongoose = require("mongoose");
 
 exports.createJob = async (req, res) => {
     try{
@@ -768,122 +770,203 @@ exports.getTopJobLocations = async (req, res) => {
       }
 };
 
-exports.filterJobs = async (req, res) => {
+// exports.filterJobs = async (req, res) => {
 
-//   const { country, city, district, studyPreference, dateRange, salaryType } = req.query;
-//   let filter = {};
+// try {
+//     const query = {};
 
-//   if (country) filter.country = country;
-//   if (city) filter.city = city;
-//   if (district) filter.district = district;
-//   if (studyPreference) filter.studyPreference = studyPreference;
-//   if (salaryType) filter.salaryType = salaryType;
-//   if (dateRange) {
-//     const now = new Date();
-//     switch (dateRange) {
-//       case 'today':
-//         filter.createdAt = { $gte: new Date(now.setHours(0, 0, 0, 0)) };
-//         break;
-//       case '3hours':
-//         filter.createdAt = { $gte: new Date(now.setHours(now.getHours() - 3)) };
-//         break;
-//       case '8hours':
-//         filter.createdAt = { $gte: new Date(now.setHours(now.getHours() - 8)) };
-//         break;
-//       case '3days':
-//         filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 3)) };
-//         break;
-//       case '7days':
-//         filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 7)) };
-//         break;
-//       case '15days':
-//         filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 15)) };
-//         break;
-//       default:
-//         break;
+//     // Construct query based on request parameters
+//     if (req.query.jobLocation) {
+//       query.jobLocation = { $in: Array.isArray(req.query.jobLocation) ? req.query.jobLocation : [req.query.jobLocation] };
 //     }
-//   }
+//     if (req.query.jobTitle) {
+//       query.jobTitle = { $in: Array.isArray(req.query.jobTitle) ? req.query.jobTitle : [req.query.jobTitle] };
+//     }
+//     if (req.query.sector) {
+//         query.sector = filters.sector;
+//     }
+//     if (req.query.service) {
+//         query.service = { $in: Array.isArray(req.query.service) ? req.query.service : [req.query.service] };
+//       }
+//     // if (req.query.companyName) {
+//     //   query.companyName = { $in: Array.isArray(req.query.companyName) ? req.query.companyName : [req.query.companyName] };
+//     // }
+//     if (req.query.jobType) {
+//       query.jobType = { $in: Array.isArray(req.query.jobType) ? req.query.jobType : [req.query.jobType] };
+//     }
+//     if (req.query.salaryType) {
+//       query.salaryType = { $in: Array.isArray(req.query.salaryType) ? req.query.salaryType : [req.query.salaryType] };
+//     }
+//     // if (req.query.requiredSkills) {
+//     //   query.requiredSkills = { $all: req.query.requiredSkills.split(',') };
+//     // }
+//     // if (req.query.publishedDate) {
+//     //   const publishedDate = JSON.parse(req.query.publishedDate);
+//     //   query.publishedDate = {};
+//     //   if (publishedDate.$gte) query.publishedDate.$gte = new Date(publishedDate.$gte);
+//     //   if (publishedDate.$lte) query.publishedDate.$lte = new Date(publishedDate.$lte);
+//     // }
+//     // if (req.query.licenseType) {
+//     //   const licenseTypes = Array.isArray(req.query.licenseType) ? req.query.licenseType : [req.query.licenseType];
+//     //   query.licenseType = { $regex: licenseTypes.map(type => `(?=.*${type})`).join(''), $options: 'i' };
+//     // }
+//     // if (req.query.passport) {
+//     //   query.passport = { $in: Array.isArray(req.query.passport) ? req.query.passport : [req.query.passport] };
+//     // }
+//     // if (req.query.visa) {
+//     //   query.visa = { $in: Array.isArray(req.query.visa) ? req.query.visa : [req.query.visa] };
+//     // }
+//     // if (req.query.abroadExperience) {
+//     //   query.abroadExperience = { $gte: Number(req.query.abroadExperience) };
+//     // }
+//     // if (req.query.isBlindSpotTraining) {
+//     //   query.isBlindSpotTraining = req.query.isBlindSpotTraining === 'true';
+//     // }
+//     // if (req.query.isSafeDrivingTraining) {
+//     //   query.isSafeDrivingTraining = req.query.isSafeDrivingTraining === 'true';
+//     // }
+//     // if (req.query.isFuelEconomyTraining) {
+//     //   query.isFuelEconomyTraining = req.query.isFuelEconomyTraining === 'true';
+//     // }
 
-//   try {
-//     const jobs = await Job.find(filter);
-//     res.status(200).json(jobs);
-//   } catch (error) {
+//     // Ensure at least one filter is applied
+//     if (Object.keys(query).length === 0) {
+//       return res.status(400).json({ message: 'No filter applied' });
+//     }
+
+//     console.log('Constructed Query:', JSON.stringify(query, null, 2));
+
+//     const jobs = await Job.find(query).sort({ publishedDate: -1 }); // Sort by publishedDate in descending order
+//     console.log("fetched filtered jobs: ", jobs);
+//     res.status(200).json({
+//       success: true,
+//       message: "Filtered jobs fetched successfully!",
+//       data: jobs,
+//     });
+//   } 
+
+
+// catch (error) {
+//     console.error('Error fetching jobs:', error);
 //     res.status(500).json({ message: 'Server error', error });
 //   }
 
-try {
-    const query = {};
 
-    // Construct query based on request parameters
-    if (req.query.jobTitle) {
-      query.jobTitle = { $in: Array.isArray(req.query.jobTitle) ? req.query.jobTitle : [req.query.jobTitle] };
-    }
-    if (req.query.companyName) {
-      query.companyName = { $in: Array.isArray(req.query.companyName) ? req.query.companyName : [req.query.companyName] };
-    }
-    if (req.query.jobType) {
-      query.jobType = { $in: Array.isArray(req.query.jobType) ? req.query.jobType : [req.query.jobType] };
-    }
-    if (req.query.salaryType) {
-      query.salaryType = { $in: Array.isArray(req.query.salaryType) ? req.query.salaryType : [req.query.salaryType] };
-    }
-    if (req.query.requiredSkills) {
-      query.requiredSkills = { $all: req.query.requiredSkills.split(',') };
-    }
-    if (req.query.jobLocation) {
-      query.jobLocation = { $in: Array.isArray(req.query.jobLocation) ? req.query.jobLocation : [req.query.jobLocation] };
-    }
-    if (req.query.publishedDate) {
-      const publishedDate = JSON.parse(req.query.publishedDate);
-      query.publishedDate = {};
-      if (publishedDate.$gte) query.publishedDate.$gte = new Date(publishedDate.$gte);
-      if (publishedDate.$lte) query.publishedDate.$lte = new Date(publishedDate.$lte);
-    }
-    if (req.query.licenseType) {
-      const licenseTypes = Array.isArray(req.query.licenseType) ? req.query.licenseType : [req.query.licenseType];
-      query.licenseType = { $regex: licenseTypes.map(type => `(?=.*${type})`).join(''), $options: 'i' };
-    }
-    if (req.query.passport) {
-      query.passport = { $in: Array.isArray(req.query.passport) ? req.query.passport : [req.query.passport] };
-    }
-    if (req.query.visa) {
-      query.visa = { $in: Array.isArray(req.query.visa) ? req.query.visa : [req.query.visa] };
-    }
-    if (req.query.abroadExperience) {
-      query.abroadExperience = { $gte: Number(req.query.abroadExperience) };
-    }
-    if (req.query.isBlindSpotTraining) {
-      query.isBlindSpotTraining = req.query.isBlindSpotTraining === 'true';
-    }
-    if (req.query.isSafeDrivingTraining) {
-      query.isSafeDrivingTraining = req.query.isSafeDrivingTraining === 'true';
-    }
-    if (req.query.isFuelEconomyTraining) {
-      query.isFuelEconomyTraining = req.query.isFuelEconomyTraining === 'true';
-    }
+// };
 
-    // Ensure at least one filter is applied
-    if (Object.keys(query).length === 0) {
-      return res.status(400).json({ message: 'No filter applied' });
+// exports.filterJobs = async (req, res) => {
+//     try {
+//       const query = {};
+  
+//       // Construct query based on request parameters
+//       if (req.query.jobLocation) {
+//         query.jobLocation = { $in: Array.isArray(req.query.jobLocation) ? req.query.jobLocation : [req.query.jobLocation] };
+//       }
+//       if (req.query.jobTitle) {
+//         query.jobTitle = { $in: Array.isArray(req.query.jobTitle) ? req.query.jobTitle : [req.query.jobTitle] };
+//       }
+//       if (req.query.sectorId) {
+//         query.sector = req.query.sectorId;
+//       }
+//       if (req.query.service) {
+//         query.service = { $in: Array.isArray(req.query.service) ? req.query.service : [req.query.service] };
+//       }
+//       if (req.query.jobType) {
+//         query.jobType = { $in: Array.isArray(req.query.jobType) ? req.query.jobType : [req.query.jobType] };
+//       }
+//       if (req.query.salaryType) {
+//         query.salaryType = { $in: Array.isArray(req.query.salaryType) ? req.query.salaryType : [req.query.salaryType] };
+//       }
+  
+//       // Ensure at least one filter is applied
+//       if (Object.keys(query).length === 0) {
+//         return res.status(400).json({ message: 'No filter applied' });
+//       }
+  
+//       console.log('Constructed Query:', JSON.stringify(query, null, 2));
+  
+//       const jobs = await Job.find(query).sort({ publishedDate: -1 }); // Sort by publishedDate in descending order
+//       console.log("fetched filtered jobs: ", jobs);
+//       res.status(200).json({
+//         success: true,
+//         message: "Filtered jobs fetched successfully!",
+//         data: jobs,
+//       });
+//     } catch (error) {
+//       console.error('Error fetching jobs:', error);
+//       res.status(500).json({ message: 'Server error', error });
+//     }
+//   };
+  
+exports.filterJobs = async (req, res) => {
+    try {
+        const query = {};
+
+        // Construct query based on request parameters
+        if (req.query.jobLocation) {
+            query.jobLocation = { $in: Array.isArray(req.query.jobLocation) ? req.query.jobLocation : [req.query.jobLocation] };
+        }
+        if (req.query.jobTitle) {
+            query.jobTitle = { $in: Array.isArray(req.query.jobTitle) ? req.query.jobTitle : [req.query.jobTitle] };
+        }
+        if (req.query.service) {
+            query.service = { $in: Array.isArray(req.query.service) ? req.query.service : [req.query.service] };
+        }
+        if (req.query.jobType) {
+            query.jobType = { $in: Array.isArray(req.query.jobType) ? req.query.jobType : [req.query.jobType] };
+        }
+        if (req.query.salaryType) {
+            query.salaryType = { $in: Array.isArray(req.query.salaryType) ? req.query.salaryType : [req.query.salaryType] };
+        }
+        
+        // Ensure at least one filter is applied
+        if (Object.keys(query).length === 0 && !req.query.sectorId) {
+            return res.status(400).json({ message: 'No filter applied' });
+        }
+
+        console.log('Constructed Query:', JSON.stringify(query, null, 2));
+
+        let jobs;
+        if (req.query.sectorId) {
+            // If sectorId is present, perform aggregation to filter jobs by sectorId
+            jobs = await Job.aggregate([
+                {
+                    $lookup: {
+                        from: "services",
+                        localField: "service",
+                        foreignField: "_id",
+                        as: "serviceDetails"
+                    }
+                },
+                {
+                    $unwind: "$serviceDetails"
+                },
+                {
+                    $match: {
+                        "serviceDetails.sector": mongoose.Types.ObjectId(req.query.sectorId),
+                        ...query
+                    }
+                },
+                {
+                    $sort: { publishedDate: -1 }
+                }
+            ]);
+        } else {
+            // If sectorId is not present, perform a regular find query
+            jobs = await Job.find(query).sort({ publishedDate: -1 });
+        }
+
+        console.log("fetched filtered jobs: ", jobs);
+        res.status(200).json({
+            success: true,
+            message: "Filtered jobs fetched successfully!",
+            data: jobs,
+        });
+    } catch (error) {
+        console.error('Error fetching jobs:', error);
+        res.status(500).json({ message: 'Server error', error });
     }
-
-    console.log('Constructed Query:', JSON.stringify(query, null, 2));
-
-    const jobs = await Job.find(query).sort({ publishedDate: -1 }); // Sort by publishedDate in descending order
-    console.log("fetched filtered jobs: ", jobs);
-    res.status(200).json({
-      success: true,
-      message: "Filtered jobs fetched successfully!",
-      data: jobs,
-    });
-  } catch (error) {
-    console.error('Error fetching jobs:', error);
-    res.status(500).json({ message: 'Server error', error });
-  }
-
-
 };
-
 
 
 exports.getInternationalJobs = async (req, res) => {
@@ -901,5 +984,186 @@ exports.getInternationalJobs = async (req, res) => {
         message:"International Jobs fetches successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+exports.getJobsByProvince = async (req, res) => {
+    try {
+        const jobPostings = await Job.aggregate([
+            { $group: { _id: "$jobLocation", count: { $sum: 1 } } }
+        ]);
+        res.status(200).json(jobPostings);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// exports.getJobsBySector = async (req, res) => {
+//     // try {
+//     //     const jobPostings = await Service.aggregate([
+//     //         { $group: { _id: "$sector", count: { $sum: { $size: "$jobs" } } } }
+//     //     ]);
+//     //     res.status(200).json(jobPostings);
+//     // } catch (error) {
+//     //     res.status(500).json({ error: error.message });
+//     // }
+//     try {
+//         const sectors = await Sector.aggregate([
+//             {
+//                 $lookup: {
+//                     from: "services",
+//                     localField: "services",
+//                     foreignField: "_id",
+//                     as: "serviceDetails",
+//                 },
+//             },
+//             {
+//                 $unwind: "$serviceDetails"
+//             },
+//             {
+//                 $match: {
+//                     "serviceDetails.status": "Active",
+//                 }
+//             },
+//             {
+//                 $group: {
+//                     _id: {
+//                         sectorId: "$_id",
+//                         sectorName: "$sectorName"
+//                     },
+//                     count: { $sum: { $size: "$serviceDetails.jobs" } }
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     _id: 0,
+//                     sectorId: "$_id.sectorId",
+//                     sectorName: "$_id.sectorName",
+//                     count: 1
+//                 }
+//             }
+//         ]);
+//         res.status(200).json(sectors);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+    
+// };
+
+exports.getJobsBySector = async (req, res) => {
+    try {
+        const sectors = await Sector.aggregate([
+            {
+                $lookup: {
+                    from: "services",
+                    localField: "_id", // Match the sector ID with the services' sector field
+                    foreignField: "sector",
+                    as: "serviceDetails",
+                },
+            },
+            {
+                $unwind: "$serviceDetails",
+            },
+            {
+                $match: {
+                    "serviceDetails.status": "Active",
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id", // Group by sector ID
+                    sectorName: { $first: "$sectorName" }, // Get sector name
+                    count: { $sum: { $size: "$serviceDetails.jobs" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    sectorId: "$_id", // Project sector ID as separate field
+                    sectorName: 1,
+                    count: 1
+                }
+            }
+        ]);
+        res.status(200).json(sectors);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+// exports.getJobsByService = async (req, res) => {
+//     try {
+//         const jobPostings = await Job.aggregate([
+//             {
+//                 $group: {
+//                     _id: "$service",
+//                     count: { $sum: 1 }
+//                 }
+//             },
+//             {
+//                 $lookup: {
+//                     from: "services",
+//                     localField: "_id",
+//                     foreignField: "_id",
+//                     as: "service"
+//                 }
+//             },
+//             {
+//                 $unwind: "$service"
+//             },
+//             {
+//                 $project: {
+//                     _id: "$service.serviceName",
+//                     count: 1
+//                 }
+//             }
+//         ]);
+//         res.status(200).json(jobPostings);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+    
+// };
+
+exports.getJobsByService = async (req, res) => {
+    try {
+        const services = await Service.aggregate([
+            {
+                $lookup: {
+                    from: "jobs",
+                    localField: "_id",
+                    foreignField: "service",
+                    as: "jobDetails",
+                },
+            },
+            {
+                $unwind: "$jobDetails",
+            },
+            {
+                $match: {
+                    "jobDetails.status": "Active",
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id", // Group by service ID
+                    serviceName: { $first: "$serviceName" }, // Get service name
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    serviceId: "$_id", // Project service ID as separate field
+                    serviceName: 1,
+                    count: 1
+                }
+            }
+        ]);
+        res.status(200).json(services);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };

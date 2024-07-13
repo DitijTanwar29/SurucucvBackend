@@ -23,7 +23,8 @@ exports.createService = async(req,res) => {
         if(
             !serviceName ||
             !serviceDescription ||
-            !icon 
+            !icon ||
+            !sector
         ) {
             return res.status(400).json({
                 success: false,
@@ -67,16 +68,16 @@ exports.createService = async(req,res) => {
         })
         
 
-        //add the service to the admin schema 
-        // await User.findByIdAndUpdate(
-        //     {_id: adminDetails._id},
-        //     {
-        //         $push: {
-        //             services: newService._id,
-        //         }
-        //     },
-        //     {new:true},
-        // );
+        //add the service to the sector schema 
+        await Sector.findByIdAndUpdate(
+            {_id: sector},
+            {
+                $push: {
+                    services: newService._id,
+                }
+            },
+            {new:true},
+        );
 
 
         //return response

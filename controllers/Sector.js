@@ -195,3 +195,31 @@ exports.updateSectorStatus = async (req, res) => {
     }
 };
 
+exports.getActiveSectors = async (req, res) => {
+    try {
+// Find all sectors with status 'active'
+const activeSectors = await Sector.find({ status: 'Active' });
+
+
+    //validation
+    if(!activeSectors) {
+        return res.staus(400).json({
+            success: false,
+            message:"Could not find the Active Sectors",
+        });
+    }
+
+  //return response
+    return res.status(200).json({
+        success:true,
+        message:"Active Sectors details fetched successfully",
+        data: activeSectors,
+    });
+}catch(error){
+    console.log(error);
+    return res.status(500).json({
+        success:false,
+        message:error.message,
+    });
+}
+}
