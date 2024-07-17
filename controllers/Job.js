@@ -14,7 +14,7 @@ exports.createJob = async (req, res) => {
             title, description, service, skills, requiredExperience, 
             location,companyName, salaryRange, salaryType, 
             vacancy, startDate, endDate, jobType, status,
-            licenseType="",srcBox,isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicence,
+            licenseType="",srcBox,isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicence, isCode95Document,
             passport,visa,abroadExperience,
             isBlindSpotTraining,isSafeDrivingTraining,isFuelEconomyTraining, isInternationalJob
         } = req.body;
@@ -99,6 +99,7 @@ exports.createJob = async (req, res) => {
             isSrc4: isSrc4,
             psikoteknik: psikoteknik,
             adrDrivingLicence: adrDriverLicence,
+            isCode95Document: isCode95Document,
             passport: passport,
             visa: visa,
             abroadExperience: abroadExperience,
@@ -573,7 +574,7 @@ exports.showAppliedCandidates = async (req, res) => {
 
 
 
-// exports.getTopJobPostings = async (req, res) => {
+
 //     try {
 //         const topJobPostings = await Job.aggregate([
 //             { 
@@ -605,11 +606,36 @@ exports.showAppliedCandidates = async (req, res) => {
 //     }
 // };
 
+// exports.getTopJobPostings = async (req, res) => {
+//     try {
+//       const result = await Job.aggregate([
+//         // Group by job title and count the number of job postings for each title
+//         { $group: { _id: "$jobTitle", count: { $sum: 1 } } },
+//         // Sort by count in descending order
+//         { $sort: { count: -1 } },
+//         // Limit to the top 5 job titles
+//         { $limit: 5 },
+//         // Project to rename fields and include only necessary fields
+//         {
+//           $project: {
+//             _id: 0,
+//             jobTitle: "$_id",
+//             numberOfJobPostings: "$count"
+//           }
+//         }
+//       ]);
+  
+//       return res.status(200).json({ success: true, data: result });
+
+//     } catch (error) {
+//         return res.status(500).json({ success: false, message: error.message });
+//     }
+//   };
 exports.getTopJobPostings = async (req, res) => {
     try {
       const result = await Job.aggregate([
         // Group by job title and count the number of job postings for each title
-        { $group: { _id: "$jobTitle", count: { $sum: 1 } } },
+        { $group: { _id: "$jobTitle", count: { $sum: 1 }, jobIds: { $push: "$_id" } } },
         // Sort by count in descending order
         { $sort: { count: -1 } },
         // Limit to the top 5 job titles
@@ -619,18 +645,54 @@ exports.getTopJobPostings = async (req, res) => {
           $project: {
             _id: 0,
             jobTitle: "$_id",
-            numberOfJobPostings: "$count"
+            numberOfJobPostings: "$count",
+            id: { $arrayElemAt: ["$jobIds", 0] }
           }
         }
       ]);
   
       return res.status(200).json({ success: true, data: result });
-
+  
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+      return res.status(500).json({ success: false, message: error.message });
     }
   };
 
+  exports.getTopJobLocations = async (req, res) => {
+    
+    try {
+        const topLocations = await Job.aggregate([
+          // Group by jobLocation and count the number of jobs for each location
+          {
+            $group: {
+              _id: "$jobLocation",
+              jobCount: { $sum: 1 },
+            jobs: { $push: "$_id" }
+              
+            },
+          },
+          // Sort by jobCount in descending order
+          {
+            $sort: { jobCount: -1 },
+          },
+          // Limit to the top 5 locations
+          {
+            $limit: 5,
+          },
+        ]);
+    
+        res.status(200).json({
+          success: true,
+          data: topLocations,
+        });
+      } catch (error) {
+        console.error("Error fetching top job locations:", error.message);
+        res.status(500).json({
+          success: false,
+          message: "Server Error",
+        });
+      }
+};
 
 // exports.searchActiveJobs = async (searchTerm) => {
 //     try {
@@ -734,41 +796,7 @@ exports.getPartTimeJobs = async (req, res) => {
 // }
 
 
-exports.getTopJobLocations = async (req, res) => {
-    
-    try {
-        const topLocations = await Job.aggregate([
-          // Group by jobLocation and count the number of jobs for each location
-          {
-            $group: {
-              _id: "$jobLocation",
-              jobCount: { $sum: 1 },
-            jobs: { $push: "$_id" }
-              
-            },
-          },
-          // Sort by jobCount in descending order
-          {
-            $sort: { jobCount: -1 },
-          },
-          // Limit to the top 5 locations
-          {
-            $limit: 5,
-          },
-        ]);
-    
-        res.status(200).json({
-          success: true,
-          data: topLocations,
-        });
-      } catch (error) {
-        console.error("Error fetching top job locations:", error.message);
-        res.status(500).json({
-          success: false,
-          message: "Server Error",
-        });
-      }
-};
+
 
 // exports.filterJobs = async (req, res) => {
 

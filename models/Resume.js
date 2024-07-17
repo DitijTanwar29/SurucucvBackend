@@ -67,6 +67,14 @@ const resumeSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+    mykCertificate: {
+        type : Date,
+        default: null,
+    },
+    mykExpiryDate: {
+        type : Date,
+        default: null,
+    },
     // Abilities
     passport: {
         type: String,

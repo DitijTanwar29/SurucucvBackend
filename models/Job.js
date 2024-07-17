@@ -107,7 +107,10 @@ const jobSchema = new mongoose.Schema({
         type: Number,
         
     },
-
+    isCode95Document: {
+        type: Boolean,
+        default: false,
+    },
     // Abilities
     passport: {
         type: String,
