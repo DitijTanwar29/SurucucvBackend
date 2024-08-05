@@ -20,8 +20,9 @@ const companyProfileSchema = new mongoose.Schema({
     companyTitle: {
         type:String,
     },
-    industryName: {
-        type: String,
+    sector: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"Sector"
     },
     taxAdministration: {
         type: String,

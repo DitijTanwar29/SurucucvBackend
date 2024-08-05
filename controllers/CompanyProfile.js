@@ -1,13 +1,14 @@
 const CompanyProfile = require("../models/CompanyProfile");
 const User = require("../models/User");
+const Sector = require("../models/Sector")
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
-
+const Job = require("../models/Job")
 exports.updateCompanyProfile = async (req, res) => {
     try{
         //get data
         const { 
         name, email, position="", contactNumber, dateOfBirth="",
-         companyTitle, industryName, taxAdministration="",
+         companyTitle, sector, taxAdministration="",
           taxNumber, companyAddress="" } = req.body;
 
         // const profileImage = req.files.profileImage;
@@ -41,22 +42,26 @@ exports.updateCompanyProfile = async (req, res) => {
 
         await user.save()
 console.log("user :",user)
-        //upload profile pic
-        // const profilePic = await uploadImageToCloudinary(
-        //     profileImage,
-        //     process.env.FOLDER_NAME,
-        //     1000,
-        //     1000
-        // )
-        // console.log(profilePic);
-        //upload cover pic 
-        // const coverPic = await uploadImageToCloudinary(
-        //     coverImage,
-        //     process.env.FOLDER_NAME,
-        //     1000,
-        //     1000
-        // )
-        // console.log(coverPic);
+
+const sectorDetails = await Sector.findById(sector);
+        if(!sectorDetails) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sector Details not found',
+            });
+        }
+//add the service to the sector schema 
+await Sector.findByIdAndUpdate(
+  {_id: sector},
+  {
+      $push: {
+          company: userDetails._id,
+      }
+  },
+  {new:true},
+);
+        
+
 
 
         //update Company Profile 
@@ -66,7 +71,7 @@ console.log("user :",user)
         companyProfileDetails.contactNumber = contactNumber;
         companyProfileDetails.dateOfBirth = dateOfBirth;
         companyProfileDetails.companyTitle = companyTitle;
-        companyProfileDetails.industryName = industryName;
+        companyProfileDetails.sector = sector;
         companyProfileDetails.taxAdministration = taxAdministration;
         companyProfileDetails.taxNumber = taxNumber;
         companyProfileDetails.companyAddress = companyAddress;
@@ -151,44 +156,96 @@ exports.getAllCompanies = async (req, res) => {
     }
 }
 //Delete Account
+// exports.deleteAccount = async (req, res) => {
+//   try {
+//       // Get user ID
+//       console.log("printing id", req.user.id);
+//       const id = req.user.id;
+
+//       // Validate user
+//       const userDetails = await User.findById(id);
+//       if (!userDetails) {
+//           return res.status(404).json({
+//               success: false,
+//               message: 'User not found',
+//           });
+//       }
+
+//       // Delete associated company profile
+//       await CompanyProfile.findByIdAndDelete(userDetails.companyDetails);
+
+//       // Delete associated jobs
+//       const jobIds = userDetails.jobs;
+//       if (jobIds && jobIds.length > 0) {
+//           await Job.deleteMany({ _id: { $in: jobIds } });
+//       }
+
+//       // Remove jobs from user's jobs array
+//       await User.findByIdAndUpdate(id, { $set: { jobs: [] } });
+
+//       // Delete user
+//       await User.findByIdAndDelete(id);
+
+//       // Return response
+//       return res.status(200).json({
+//           success: true,
+//           message: 'Company and associated jobs deleted successfully',
+//       });
+
+//   } catch (error) {
+//       console.error(error);
+//       return res.status(500).json({
+//           success: false,
+//           message: 'Company cannot be deleted successfully',
+//       });
+//   }
+// };
+
 exports.deleteAccount = async (req, res) => {
-    try{
-            //  const job = schedule.scheduleJob("10 * * * * *", function () {
-            // 	console.log("The answer to life, the universe, and everything!");
-            // });
-            // console.log(job);
+  try {
+      // Get user ID
+      console.log("printing id", req.user.id);
+      const id = req.user.id;
 
-        //get id 
-        console.log("printing id",req.user.id);
-        const id = req.user.id;
-        //validation 
-        const userDetails = await User.findByIdAndDelete(id);
-        if(!userDetails) {
-            return res.status(404).json({
-                success:false,
-                message:'User not found',
-            });
-        }
-        //delete profile
-        await CompanyProfile.findByIdAndDelete({_id: userDetails.companyDetails});
-        
+      // Validate user
+      const userDetails = await User.findById(id);
+      if (!userDetails) {
+          return res.status(404).json({
+              success: false,
+              message: 'User not found',
+          });
+      }
 
-        //delete user
-        await User.findByIdAndDelete({_id:id});
-        
-        //return response
-        return res.status(200).json({
-            success:true,
-            message:'Company deleted successfully',
-        });
+      // Delete associated company profile
+      await CompanyProfile.findByIdAndDelete(userDetails.companyDetails);
 
-    } catch(error) {
-        return res.status(500).json({
-            success:false,
-            message:'Company cannot be deleted successfully',
-        });
-    }
+      // Delete associated jobs
+      const jobIds = userDetails.jobs;
+      if (jobIds && jobIds.length > 0) {
+          await Job.deleteMany({ _id: { $in: jobIds } });
+      }
+
+      // Remove jobs from user's jobs array
+      await User.findByIdAndUpdate(id, { $set: { jobs: [] } });
+
+      // Delete user
+      await User.findByIdAndDelete(id);
+
+      // Return response
+      return res.status(200).json({
+          success: true,
+          message: 'Company and associated jobs deleted successfully',
+      });
+
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: 'Company cannot be deleted successfully',
+      });
+  }
 };
+
 
 
 exports.updateDisplayPicture = async (req, res) => {

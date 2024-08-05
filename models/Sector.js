@@ -17,6 +17,10 @@ const sectorSchema = new mongoose.Schema({
         type: String,
         enum:["Active", "Inactive"],
     },
+    company: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }
 })
 
 module.exports = mongoose.model("Sector",sectorSchema);

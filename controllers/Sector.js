@@ -73,6 +73,39 @@ exports.createSector = async(req,res) => {
     }
 };
 
+exports.getSectorDetails = async (req, res) => {
+    try{
+
+        //get id
+        const {sectorId} = req.body;
+        //find sector details
+        const sectorDetails = await Sector.find(
+                                                {_id: sectorId})
+                                                .populate("service")
+                                                .exec();
+
+        //validation
+        if(!sectorDetails) {
+            return res.staus(400).json({
+                success: false,
+                message:`Could not find the sector with ${sectorId}`,
+            });
+        }
+
+        //return response
+        return res.status(200).json({
+            success:true,
+            message:"Service details fetched successfully",
+            data: sectorDetails,
+        });
+    }catch(error){
+        console.log(error);
+        return res.status(500).json({
+            success:false,
+            message:error.message,
+        });
+    }
+}
 
 exports.editSector = async (req, res) => {
     try{

@@ -2,143 +2,468 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const otpGenerator = require("otp-generator")
-
 const User = require("../models/User");
 const CandidateProfile = require("../models/CandidateProfile");
 const CompanyProfile = require("../models/CompanyProfile");
 const AdminProfile = require("../models/AdminProfile");
-
 const OTP = require('../models/OTP');
-const { sendSMS } = require('../models/Twilio');
-const twilio = require('twilio');
-exports.sendSms = async ( req, res) => {
-   const { mobileNumber } = req.body;
+const axios = require('axios');
+const xmlbuilder = require('xmlbuilder');
+const { sendSmsOtp } = require('../utils/smsSender');
 
-  // Generate a random OTP (you may want to use a library for this)
-  const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-  try {
-    // Save the OTP to the user in the database
-    await OTP.findOneAndUpdate(
-      { mobileNumber },
-      { $set: { otp } },
-      { new: true, upsert: true }
-    );
 
-    // Send the OTP to the user's mobile number via Twilio
-    await sendSMS(`+${mobileNumber}`, `Your OTP is: ${otp}`);
 
-    res.json({ success: true, message: 'OTP generated and sent successfully'
-               ,otp });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-}
 
-// exports.sendotp = async (req, res) => {
-//    try {
-//      const { email, contactNumber } = req.body;
- 
-//      // Check if user is already present for Company account type
-//      const checkCompanyUserPresent = await User.findOne({ email, accountType: "Company" });
-//      if (checkCompanyUserPresent) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Company user is Already Registered`,
-//        });
-//      }
- 
-//      // Check if user is already present for Candidate account type
-//      const checkCandidateUserPresent = await User.findOne({ contactNumber, accountType: "Candidate" });
-//      if (checkCandidateUserPresent) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Candidate user is Already Registered`,
-//        });
-//      }
- 
-//      // Generate OTP
-//      const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
- 
-//      // Save OTP for Company user
-//      if (checkCompanyUserPresent) {
-//        await OTP.create({ email, otp });
-//      }
- 
-//      // Save OTP for Candidate user
-//      if (checkCandidateUserPresent) {
-//        await OTP.create({ mobileNumber: contactNumber, otp });
-//      }
- 
-//      res.status(200).json({
-//        success: true,
-//        message: `OTP Sent Successfully`,
-//        otp,
-//      });
-//    } catch (error) {
-//      console.log(error.message);
-//      return res.status(500).json({ success: false, error: error.message });
+// // original signup code is here 
+// exports.signup = async(req, res)=>{
+//    try{
+//          //fetching data
+//         const {name,
+//                email,
+//                password,
+//                confirmPassword,
+//                contactNumber,
+//                date,
+//                city,
+//                accountType,
+//                otp,
+//             } = req.body;
+
+//             // console.log("request", req);
+//             console.log("req.body : ",req.body)
+
+//             console.log("Reqyest.body.email: ",req.body.email);
+//          //validate data
+//          if(!name || !email || !contactNumber || !date 
+//             || !city || !password || !confirmPassword ||
+//              !accountType || !otp){
+//             return res.status(403).json({
+//                success:false,
+//                message:"All fields are required",
+//             })
+//          }
+
+//          //match 2 passwords
+//          if(password !== confirmPassword){
+//             return res.status(400).json({
+//                 success:false,
+//                 message:"Password and ConfirmPassword value does not match, please try again",
+//             })
+//         }
+
+//         //check user already exists or not
+//         const existingUser = await User.findOne({email});
+//         if(existingUser){
+//          return res.status(400).json({
+//             success:false,
+//             message:"User already registered",
+//          })
+//         }
+
+//         //ToDo: otp model and further code below
+//         //find most recent  OTP stored for the user 
+//         const response = await OTP.find({email}).sort({ createdAt: -1 }).limit(1);
+//         console.log(response);
+//         // validate OTP
+//         if(recentOtp.length === 0) {
+//           //OTP not found
+//           return res.status(400).json({
+//               success:false,
+//               message:"OTP Not Found",
+//           })
+//       }
+//       else if(otp !== recentOtp[0].otp) {
+//           //Invalid Otp
+//           return res.status(400).json({
+//               success:false,
+//               message:"Invalid OTP",
+//           });
+//       }
+    
+      
+
+//         //Hash Password
+//         const hashedPassword = await bcrypt.hash(password, 10);
+
+//         //create the additional profile for User
+//         let companyProfileDetails = {};
+//         let candidateProfileDetails = {};
+//         let adminProfileDetails = {};
+
+//         switch(accountType) {
+//          case 'Company':
+//             companyProfileDetails = await CompanyProfile.findOne({ email: null });
+//             if(!companyProfileDetails){
+//                companyProfileDetails = await CompanyProfile.create({
+//                email:null,name:null,contactNumber:null,position:null,
+//                dateOfBirth:null,companyTitle:null,industryName:null,
+//                taxAdministration:null,taxNumber:null,companyAddress:null,
+//                companyIcon:null,companyBackgroundIcon:null,
+//             });
+//          }
+//             break;
+
+//          case 'Candidate':
+//             candidateProfileDetails = await CandidateProfile.findOne({email: null});
+//             if(!candidateProfileDetails){
+//                candidateProfileDetails = await CandidateProfile.create({
+//                name:null,email:null,about:null,contactNumber:null,
+//                skill:null,city:null,PreferJobLocation:null,degree:null,   
+//             });
+//          }
+//             break;
+//          default:
+//             adminProfileDetails = await AdminProfile.findOne({email: null});
+//             if(!adminProfileDetails){
+//                adminProfileDetails = await AdminProfile.create({
+//                firstName:null,middleName:null,lastName:null,
+//                profileImage:null,backgroundImage:null,post:null,bio:null,
+//             });
+//          }
+//         }
+
+//         //create the user
+//         const user =  await User.create({
+//          name,
+//          email,
+//          date,
+//          contactNumber,
+//          password: hashedPassword,
+//          accountType: accountType,
+//          // additionalDetails: profileDetails._id,
+//          adminDetails: adminProfileDetails._id,
+//          candidateDetails: candidateProfileDetails._id,
+//          companyDetails: companyProfileDetails._id,
+//          image: "",
+//         })
+
+//       // const popu = await User.findById(user_id).populate('adminDetails').populate('companyDetails').populate('candidateDetails').exec();
+//         //return response
+//          return res.status(200).json({
+//          success : true,
+//          user,
+//          message:'User is registered Successfully',
+//       });
+
+//    } catch(error){
+//       console.log(error);
+//       return res.status(500).json({
+//          success:false,
+//          message:"User cannot be registered. Please try again."
+//       });
 //    }
-//  };
+
+// }
+//working for company 
+// exports.sendotp = async (req, res) => {
+//   try {
+//     const { email } = req.body
+
+//     // Check if user is already present
+//     // Find user with provided email
+//     const checkUserPresent = await User.findOne({ email })
+//     // to be used in case of signup
+
+//     // If user found with provided email
+//     if (checkUserPresent) {
+//       // Return 401 Unauthorized status code with error message
+//       return res.status(401).json({
+//         success: false,
+//         message: `User is Already Registered`,
+//       })
+//     }
+
+//     var otp = otpGenerator.generate(6, {
+//       upperCaseAlphabets: false,
+//       lowerCaseAlphabets: false,
+//       specialChars: false,
+//     })
+//     const result = await OTP.findOne({ otp: otp })
+//     console.log("Result in Generate OTP Func")
+//     console.log("OTP", otp)
+//     console.log("Result", result)
+//     while (result) {
+//       otp = otpGenerator.generate(6, {
+//         upperCaseAlphabets: false,
+//         lowerCaseAlphabets: false,
+//         specialChars: false,
+//       })
+//     }
+//     const otpPayload = { email, otp }
+//     const otpBody = await OTP.create(otpPayload)
+//     console.log("OTP Body", otpBody)
+//     res.status(200).json({
+//       success: true,
+//       message: `OTP Sent Successfully`,
+//       otp,
+//     })
+//   } catch (error) {
+//     console.log(error.message)
+//     return res.status(500).json({ success: false, error: error.message })
+//   }
+// }
+
+
+//for both 
+// const User = require('../models/User');
+// const OTP = require('../models/OTP');
+// const mailSender = require('../utils/mailSender');
+// const emailTemplate = require('../mail/templates/emailVerificationTemplate');
+
+exports.sendotp = async (req, res) => {
+   try {
+     const { email, contactNumber, accountType } = req.body;
  
-// signup controller
+     // Check if user is already present
+     const checkUserPresent = await User.findOne({ email });
+ 
+     // If user found with provided email
+     if (checkUserPresent) {
+       return res.status(401).json({
+         success: false,
+         message: `User is Already Registered`,
+       });
+     }
+ 
+     const otp = otpGenerator.generate(6, {
+       upperCaseAlphabets: false,
+       lowerCaseAlphabets: false,
+       specialChars: false,
+     });
+ 
+     // Save OTP to the database
+     const otpPayload = { email, otp, accountType, contactNumber };
+     await OTP.create(otpPayload);
+
+ 
+     res.status(200).json({
+       success: true,
+       message: `OTP Sent Successfully`,
+       otp,
+     });
+   } catch (error) {
+     console.error("Error occurred while sending OTP: ", error.message);
+     return res.status(500).json({ success: false, error: error.message });
+   }
+ };
+ 
+ 
+
+
+
+exports.sendSmsOtp = async (req, res) => {
+   const { phoneNumber, otp } = req.body;
+ 
+   // Generate the XML data
+   const xml = xmlbuilder.create('mainbody')
+     .ele('header')
+       .ele('usercode', '2166066134').up()
+       .ele('password', 'W5-1vhsX').up()
+       .ele('msgheader', 'ADRTURKLTD.').up()
+       .ele('appkey', '01007a72af089606218e04d553a740f5').up()
+     .up()
+     .ele('body')
+       .ele('msg')
+         .dat(`Your OTP is ${otp}`)  // Correctly placed CDATA text
+       .up()
+       .ele('no', phoneNumber).up()
+     .up()
+   .end({ pretty: true });
+ 
+   try {
+     const response = await axios.post('https://api.netgsm.com.tr/sms/send/otp', xml, {
+       headers: {
+         'Content-Type': 'application/xml'
+       }
+     });
+ 
+     if (response.data.result !== '00') {
+      //  console.log(response.data.result)
+       return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+       
+     }
+ 
+     res.status(200).json({ success: true, message: 'OTP sent successfully' });
+   } catch (error) {
+     console.error('Error sending OTP:', error);
+     res.status(500).json({ success: false, message: 'Failed to send OTP' });
+   }
+ };
+
+// exports.signup = async (req, res) => {
+   
+//     try {
+//       console.log("signup request body :", req.body)
+//         const { name, email, password, confirmPassword, date, city, contactNumber, accountType, otp} = req.body;
+
+//         if (password !== confirmPassword) {
+//             return res.status(400).json({ success: false, message: 'Passwords do not match' });
+//         }
+
+//         // Check if the user already exists
+//         const existingUser = await User.findOne({ email });
+//         if (existingUser) {
+//             return res.status(401).json({ success: false, message: 'User is already registered' });
+//         }
+//  // Generate OTP
+//  const smsOtp = generateOtp();
+
+//  if (accountType === 'CANDIDATE') {
+//    // Send OTP via SMS using Netgsm API
+//    const xmlData = xmlbuilder.create('mainbody')
+//      .ele('header')
+//        .ele('usercode', '2166066134').up()
+//        .ele('password', 'W5-1vhsX').up()
+//        .ele('msgheader', 'ADRTURKLTD.').up()
+//        .ele('appkey', '01007a72af089606218e04d553a740f5').up()
+//      .up()
+//      .ele('body')
+//        .ele('msg')
+//          .dat(`Your OTP is ${smsOtp}`)  // Correctly placed CDATA text
+//        .up()
+//        .ele('no', contactNumber).up()
+//      .up()
+//    .end({ pretty: true });
+
+//    const response = await axios.post('https://api.netgsm.com.tr/sms/send/otp', xmlData, {
+//      headers: {
+//        'Content-Type': 'application/xml'
+//      }
+//    });
+
+//    if (response.data.result !== '00') {
+//      return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+//    }
+
+//       // Save OTP to the database
+//       await OTP.create({ email, otp: smsOtp });
+
+//         } else if (accountType === 'COMPANY') {
+//             // Send OTP via email (assuming you have a sendOtp function)
+//             // Find the most recent OTP for the email
+//     const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1)
+//     console.log(response)
+//     if (response.length === 0) {
+//       // OTP not found for the email
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP length could not be 0.",
+//       })
+//     } else if (otp !== response[0].otp) {
+//       // Invalid OTP
+//       return res.status(400).json({
+//         success: false,
+//         message: "Incorrect OTP.",
+//       })
+//     }
+//         }
+
+
+//          //Hash Password
+//         const hashedPassword = await bcrypt.hash(password, 10);
+
+//         //create the additional profile for User
+//         let companyProfileDetails = {};
+//         let candidateProfileDetails = {};
+//         let adminProfileDetails = {};
+
+//         switch(accountType) {
+//          case 'Company':
+//             companyProfileDetails = await CompanyProfile.findOne({ email: null });
+//             if(!companyProfileDetails){
+//                companyProfileDetails = await CompanyProfile.create({
+//                email:null,name:null,contactNumber:null,position:null,
+//                dateOfBirth:null,companyTitle:null,industryName:null,
+//                taxAdministration:null,taxNumber:null,companyAddress:null,
+//                companyIcon:null,companyBackgroundIcon:null,
+//             });
+//          }
+//             break;
+
+//          case 'Candidate':
+//             candidateProfileDetails = await CandidateProfile.findOne({email: null});
+//             if(!candidateProfileDetails){
+//                candidateProfileDetails = await CandidateProfile.create({
+//                name:null,email:null,about:null,contactNumber:null,
+//                skill:null,city:null,PreferJobLocation:null,degree:null,   
+//             });
+//          }
+//             break;
+//          default:
+//             adminProfileDetails = await AdminProfile.findOne({email: null});
+//             if(!adminProfileDetails){
+//                adminProfileDetails = await AdminProfile.create({
+//                firstName:null,middleName:null,lastName:null,
+//                profileImage:null,backgroundImage:null,post:null,bio:null,
+//             });
+//          }
+//         }
+
+//         //create the user
+//         const user =  await User.create({
+//          name,
+//          email,
+//          date,
+//          contactNumber,
+//          password: hashedPassword,
+//          accountType: accountType,
+//          // additionalDetails: profileDetails._id,
+//          adminDetails: adminProfileDetails._id,
+//          candidateDetails: candidateProfileDetails._id,
+//          companyDetails: companyProfileDetails._id,
+//          image: "",
+//         })
+
+//       // const popu = await User.findById(user_id).populate('adminDetails').populate('companyDetails').populate('candidateDetails').exec();
+//         //return response
+//          return res.status(200).json({
+//          success : true,
+//          user,
+//          message:'User is registered Successfully',
+//       });
+//     } catch (error) {
+//         console.error('Signup error:', error);
+//         res.status(500).json({ success: false, message: 'Signup failed' });
+//     }
+// };
+
 // exports.signup = async (req, res) => {
 //    try {
-//      const { name, email, password, confirmPassword, contactNumber, date, city, accountType, otp } = req.body;
+//      console.log("signup request body:", req.body);
+//      const { name, email, password, confirmPassword, date, city, contactNumber, accountType, otp } = req.body;
  
-//      // Validate data
-//      if (!name || !email || !contactNumber || !date || !city || !password || !confirmPassword || !accountType || !otp) {
-//        return res.status(403).json({
-//          success: false,
-//          message: "All fields are required",
-//        });
-//      }
- 
-//      // Match passwords
 //      if (password !== confirmPassword) {
-//        return res.status(400).json({
-//          success: false,
-//          message: "Password and ConfirmPassword value does not match, please try again",
-//        });
+//        return res.status(400).json({ success: false, message: 'Passwords do not match' });
 //      }
  
-//      // Check if user is already registered for Company account type
-//      const checkCompanyUserPresent = await User.findOne({ email, accountType: "Company" });
-//      if (checkCompanyUserPresent) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Company user is Already Registered`,
-//        });
+//      const existingUser = await User.findOne({ email });
+//      if (existingUser) {
+//        return res.status(401).json({ success: false, message: 'User is already registered' });
 //      }
  
-//      // Check if user is already registered for Candidate account type
-//      const checkCandidateUserPresent = await User.findOne({ contactNumber, accountType: "Candidate" });
-//      if (checkCandidateUserPresent) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Candidate user is Already Registered`,
-//        });
+//      const otpQuery = { accountType, otp };
+//      if (accountType === 'COMPANY') {
+//        otpQuery.email = email;
+//      } else if (accountType === 'CANDIDATE') {
+//        otpQuery.contactNumber = contactNumber;
+//      } else {
+//        return res.status(400).json({ success: false, message: 'Invalid account type' });
 //      }
  
-//      // Verify OTP
-//      const verifiedOTP = await OTP.findOne({ mobileNumber: contactNumber, otp });
-//      if (!verifiedOTP) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Invalid OTP. Please enter the correct OTP.`,
-//        });
+//      const otpRecord = await OTP.findOne(otpQuery).sort({ createdAt: -1 }).limit(1);
+//      if (!otpRecord) {
+//        return res.status(400).json({ success: false, message: "OTP not found or expired." });
 //      }
  
-//      // Hash Password
 //      const hashedPassword = await bcrypt.hash(password, 10);
  
-//      // Create additional profile for User
 //      let companyProfileDetails = {};
 //      let candidateProfileDetails = {};
+//      let adminProfileDetails = {};
  
-//      switch(accountType) {
-//        case 'Company':
+//      switch (accountType) {
+//        case 'COMPANY':
 //          companyProfileDetails = await CompanyProfile.findOne({ email: null });
 //          if (!companyProfileDetails) {
 //            companyProfileDetails = await CompanyProfile.create({
@@ -149,7 +474,8 @@ exports.sendSms = async ( req, res) => {
 //            });
 //          }
 //          break;
-//        case 'Candidate':
+ 
+//        case 'CANDIDATE':
 //          candidateProfileDetails = await CandidateProfile.findOne({ email: null });
 //          if (!candidateProfileDetails) {
 //            candidateProfileDetails = await CandidateProfile.create({
@@ -158,12 +484,17 @@ exports.sendSms = async ( req, res) => {
 //            });
 //          }
 //          break;
+ 
 //        default:
-//          // Handle other account types if needed
-//          break;
+//          adminProfileDetails = await AdminProfile.findOne({ email: null });
+//          if (!adminProfileDetails) {
+//            adminProfileDetails = await AdminProfile.create({
+//              firstName: null, middleName: null, lastName: null,
+//              profileImage: null, backgroundImage: null, post: null, bio: null,
+//            });
+//          }
 //      }
  
-//      // Create the user
 //      const user = await User.create({
 //        name,
 //        email,
@@ -171,271 +502,101 @@ exports.sendSms = async ( req, res) => {
 //        contactNumber,
 //        password: hashedPassword,
 //        accountType,
-//        adminDetails: null,
+//        adminDetails: adminProfileDetails._id,
 //        candidateDetails: candidateProfileDetails._id,
 //        companyDetails: companyProfileDetails._id,
 //        image: "",
 //      });
  
-//      // Return response
 //      return res.status(200).json({
 //        success: true,
 //        user,
 //        message: 'User is registered Successfully',
 //      });
-//    } catch(error) {
-//      console.log(error);
-//      return res.status(500).json({
-//        success: false,
-//        message: "User cannot be registered. Please try again.",
-//      });
-//    }
-//  };
- 
- // sendotp controller
-//  exports.sendotp = async (req, res) => {
-//    try {
-//      const { email, contactNumber } = req.body;
- 
-//      // Check if user is already present for Company account type
-//      const checkCompanyUserPresent = await User.findOne({ email, accountType: "Company" });
-//      if (checkCompanyUserPresent) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Company user is Already Registered`,
-//        });
-//      }
- 
-//      // Check if user is already present for Candidate account type
-//      const checkCandidateUserPresent = await User.findOne({ contactNumber, accountType: "Candidate" });
-//      if (checkCandidateUserPresent) {
-//        return res.status(401).json({
-//          success: false,
-//          message: `Candidate user is Already Registered`,
-//        });
-//      }
- 
-//      // Generate OTP
-//      const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
- 
-//      // Save OTP for Company user
-//      if (checkCompanyUserPresent) {
-//        await OTP.create({ email, otp });
-//      }
- 
-//      // Save OTP for Candidate user
-//      if (checkCandidateUserPresent) {
-//        await OTP.create({ mobileNumber: contactNumber, otp });
-//      }
- 
-//      res.status(200).json({
-//        success: true,
-//        message: `OTP Sent Successfully`,
-//        otp,
-//      });
 //    } catch (error) {
-//      console.log(error.message);
-//      return res.status(500).json({ success: false, error: error.message });
+//      console.error('Signup error:', error);
+//      res.status(500).json({ success: false, message: 'Signup failed' });
 //    }
 //  };
-//  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-//  const authToken = process.env.TWILIO_AUTH_TOKEN;
-//  const client = twilio(accountSid, authToken);
 
-
-
-
-
-// original signup code is here 
-exports.signup = async(req, res)=>{
-   try{
-         //fetching data
-        const {name,
-               email,
-               password,
-               confirmPassword,
-               contactNumber,
-               date,
-               city,
-               accountType,
-               otp,
-            } = req.body.email;
-
-            // console.log("request", req);
-            console.log("req.body : ",req.body)
-
-            console.log("Reqyest.body.email: ",req.body.email);
-         //validate data
-         if(!name || !email || !contactNumber || !date 
-            || !city || !password || !confirmPassword ||
-             !accountType || !otp){
-            return res.status(403).json({
-               success:false,
-               message:"All fields are required",
-            })
+exports.signup = async (req, res) => {
+   try {
+     const { name, email, password, confirmPassword, date, city, contactNumber, accountType, otp } = req.body;
+ 
+     if (password !== confirmPassword) {
+       return res.status(400).json({ success: false, message: 'Passwords do not match' });
+     }
+ 
+     const existingUser = await User.findOne({ email });
+     if (existingUser) {
+       return res.status(401).json({ success: false, message: 'User is already registered' });
+     }
+ 
+     const otpCriteria = accountType === 'Candidate' ? { contactNumber } : { email };
+     const otpDoc = await OTP.findOne(otpCriteria).sort({ createdAt: -1 });
+ 
+     if (!otpDoc || otp !== otpDoc.otp) {
+       return res.status(400).json({ success: false, message: 'Incorrect OTP' });
+     }
+ 
+     const hashedPassword = await bcrypt.hash(password, 10);
+ 
+     let companyProfileDetails = {};
+     let candidateProfileDetails = {};
+     let adminProfileDetails = {};
+ 
+     switch (accountType) {
+       case 'Company':
+         companyProfileDetails = await CompanyProfile.findOne({ email: null });
+         if (!companyProfileDetails) {
+           companyProfileDetails = await CompanyProfile.create({
+             email: null, name: null, contactNumber: null, position: null,
+             dateOfBirth: null, companyTitle: null, industryName: null,
+             taxAdministration: null, taxNumber: null, companyAddress: null,
+             companyIcon: null, companyBackgroundIcon: null,
+           });
          }
-
-         //match 2 passwords
-         if(password !== confirmPassword){
-            return res.status(400).json({
-                success:false,
-                message:"Password and ConfirmPassword value does not match, please try again",
-            })
-        }
-
-        //check user already exists or not
-        const existingUser = await User.findOne({email});
-        if(existingUser){
-         return res.status(400).json({
-            success:false,
-            message:"User already registered",
-         })
-        }
-
-        //ToDo: otp model and further code below
-        //find most recent  OTP stored for the user 
-        const response = await OTP.find({email}).sort({ createdAt: -1 }).limit(1);
-        console.log(response);
-        // validate OTP
-        if(recentOtp.length === 0) {
-          //OTP not found
-          return res.status(400).json({
-              success:false,
-              message:"OTP Not Found",
-          })
-      }
-      else if(otp !== recentOtp[0].otp) {
-          //Invalid Otp
-          return res.status(400).json({
-              success:false,
-              message:"Invalid OTP",
-          });
-      }
-    
-      
-
-        //Hash Password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        //create the additional profile for User
-        let companyProfileDetails = {};
-        let candidateProfileDetails = {};
-        let adminProfileDetails = {};
-
-        switch(accountType) {
-         case 'Company':
-            companyProfileDetails = await CompanyProfile.findOne({ email: null });
-            if(!companyProfileDetails){
-               companyProfileDetails = await CompanyProfile.create({
-               email:null,name:null,contactNumber:null,position:null,
-               dateOfBirth:null,companyTitle:null,industryName:null,
-               taxAdministration:null,taxNumber:null,companyAddress:null,
-               companyIcon:null,companyBackgroundIcon:null,
-            });
+         break;
+ 
+       case 'Candidate':
+         candidateProfileDetails = await CandidateProfile.findOne({ email: null });
+         if (!candidateProfileDetails) {
+           candidateProfileDetails = await CandidateProfile.create({
+             name: null, email: null, about: null, contactNumber: null,
+             skill: null, city: null, PreferJobLocation: null, degree: null,
+           });
          }
-            break;
-
-         case 'Candidate':
-            candidateProfileDetails = await CandidateProfile.findOne({email: null});
-            if(!candidateProfileDetails){
-               candidateProfileDetails = await CandidateProfile.create({
-               name:null,email:null,about:null,contactNumber:null,
-               skill:null,city:null,PreferJobLocation:null,degree:null,   
-            });
+         break;
+ 
+       default:
+         adminProfileDetails = await AdminProfile.findOne({ email: null });
+         if (!adminProfileDetails) {
+           adminProfileDetails = await AdminProfile.create({
+             firstName: null, middleName: null, lastName: null,
+             profileImage: null, backgroundImage: null, post: null, bio: null,
+           });
          }
-            break;
-         default:
-            adminProfileDetails = await AdminProfile.findOne({email: null});
-            if(!adminProfileDetails){
-               adminProfileDetails = await AdminProfile.create({
-               firstName:null,middleName:null,lastName:null,
-               profileImage:null,backgroundImage:null,post:null,bio:null,
-            });
-         }
-        }
-
-        //create the user
-        const user =  await User.create({
-         name,
-         email,
-         date,
-         contactNumber,
-         password: hashedPassword,
-         accountType: accountType,
-         // additionalDetails: profileDetails._id,
-         adminDetails: adminProfileDetails._id,
-         candidateDetails: candidateProfileDetails._id,
-         companyDetails: companyProfileDetails._id,
-         image: "",
-        })
-
-      // const popu = await User.findById(user_id).populate('adminDetails').populate('companyDetails').populate('candidateDetails').exec();
-        //return response
-         return res.status(200).json({
-         success : true,
-         user,
-         message:'User is registered Successfully',
-      });
-
-   } catch(error){
-      console.log(error);
-      return res.status(500).json({
-         success:false,
-         message:"User cannot be registered. Please try again."
-      });
+     }
+ 
+     const user = await User.create({
+       name, email, date, contactNumber, password: hashedPassword, accountType,
+       adminDetails: adminProfileDetails._id,
+       candidateDetails: candidateProfileDetails._id,
+       companyDetails: companyProfileDetails._id,
+       image: "",
+     });
+ 
+     return res.status(200).json({
+       success: true,
+       user,
+       message: 'User is registered Successfully',
+     });
+   } catch (error) {
+     console.error('Signup error:', error);
+     res.status(500).json({ success: false, message: 'Signup failed' });
    }
-
-}
-
-exports.sendotp = async (req, res) => {
-  try {
-    const { email } = req.body
-
-    // Check if user is already present
-    // Find user with provided email
-    const checkUserPresent = await User.findOne({ email })
-    // to be used in case of signup
-
-    // If user found with provided email
-    if (checkUserPresent) {
-      // Return 401 Unauthorized status code with error message
-      return res.status(401).json({
-        success: false,
-        message: `User is Already Registered`,
-      })
-    }
-
-    var otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    })
-    const result = await OTP.findOne({ otp: otp })
-    console.log("Result in Generate OTP Func")
-    console.log("OTP", otp)
-    console.log("Result", result)
-    while (result) {
-      otp = otpGenerator.generate(6, {
-        upperCaseAlphabets: false,
-        lowerCaseAlphabets: false,
-        specialChars: false,
-      })
-    }
-    const otpPayload = { email, otp }
-    const otpBody = await OTP.create(otpPayload)
-    console.log("OTP Body", otpBody)
-    res.status(200).json({
-      success: true,
-      message: `OTP Sent Successfully`,
-      otp,
-    })
-  } catch (error) {
-    console.log(error.message)
-    return res.status(500).json({ success: false, error: error.message })
-  }
-}
-
-
+ };
+ 
 
 //Login
 exports.login = async (req, res) => {
@@ -557,6 +718,9 @@ exports.changePassword = async (req, res) => {
       });
    }
 }
+
+
+
 
 //      exports.signin =async(req, res)=> {
 

@@ -4,7 +4,8 @@ const { auth, isCompany } = require("../middleware/auth");
 
 const {
     updateCompanyProfile,
-    updateDisplayPicture
+    updateDisplayPicture,
+    deleteAccount,
 } = require("../controllers/CompanyProfile");
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -13,5 +14,5 @@ const {
 
 router.put("/updateCompanyProfile", auth, isCompany, updateCompanyProfile);
 router.put("/updateDisplayPicture", auth, updateDisplayPicture)
-
+router.delete("/deleteAccount", auth, deleteAccount)
 module.exports = router;
