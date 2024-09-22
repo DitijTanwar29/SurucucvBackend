@@ -3,7 +3,8 @@ const router = express.Router();
 
 //Job controllers Import
 const { createPackage, updateAdvertisingPackage, deleteAdvertisingPackage,
-showAllPackages, getPackageDetails, getActivePackages,updatePackageStatus } = require("../controllers/Package")
+showAllPackages, getPackageDetails, getActivePackages,updatePackageStatus,
+confirmPayment } = require("../controllers/Package")
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
@@ -16,4 +17,5 @@ router.get("/showAllPackages", showAllPackages);
 router.post("/getPackageDetails", getPackageDetails);
 router.get("/getActivPackages",getActivePackages);
 router.post("/updatePackageStatus", updatePackageStatus);
+router.post("/confirm-payment", confirmPayment);
 module.exports = router;

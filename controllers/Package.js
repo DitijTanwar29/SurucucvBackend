@@ -12,6 +12,8 @@ exports.createPackage = async (req, res) => {
       startDate,
       endDate,
       status,
+      resumeViews,
+      packageDuration
     } = req.body;
 
     // validate data
@@ -21,7 +23,9 @@ exports.createPackage = async (req, res) => {
       !discountedPrice ||
       !features ||
       !jobPostLimit ||
-      !advertisingLimit
+      !advertisingLimit ||
+      !resumeViews || 
+      !packageDuration
       // !startDate ||
       // !endDate
     ) {
@@ -46,6 +50,8 @@ exports.createPackage = async (req, res) => {
       startDate: startDate,
       endDate: endDate,
       status: status,
+      resumeViews: resumeViews,
+      packageDuration: packageDuration,
     });
     // await newPackage.save();
     return res.status(200).json({
@@ -157,6 +163,8 @@ exports.showAllPackages = async (req, res) => {
         jobPostLimit: true,
         advertisingLimit: true,
         features: true,
+        resumeViews: true,
+        packageDuration: true
       }
     ).exec();
 
@@ -269,3 +277,62 @@ exports.updatePackageStatus = async (req, res) => {
       });
   }
 };
+
+// controllers/paymentController.js
+
+const axios = require('axios');
+// const xml2js = require('xml2js'); // Optional if you want to parse SOAP responses
+
+// Placeholder: Replace with your actual admin phone number and credentials
+const adminPhoneNumber = "5323047271";
+const netgsmUsername = "2166066134";
+const netgsmPassword = "W5-1vhsX";
+const smsHeader = "ADRTURKLTD.";
+const appKey = "01007a72af089606218e04d553a740f5";
+
+// Handle payment confirmation and send SMS to admin
+exports.confirmPayment = async (req, res) => {
+  try {
+    const { packageName, user, paymentDetails } = req.body;
+    console.log("packageId from req.bpdy.props : ",packageName,"user from req body props : ",user)
+    // Logic to verify payment details and save the payment information
+    // Save to your database (e.g., Payments model) and mark payment as pending approval
+
+    // Construct SOAP XML body for Netgsm API
+    const message = `Payment received for Package Name: ${packageName} from User: ${user}. Please review and approve.`;
+    const soapXML = `<?xml version="1.0"?>
+      <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+           xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <SOAP-ENV:Body>
+            <ns3:smsGonder1NV2 xmlns:ns3="http://sms/">
+                <username>${netgsmUsername}</username>
+                <password>${netgsmPassword}</password>
+                <header>${smsHeader}</header>
+                <msg>${message}</msg>
+                <gsm>${adminPhoneNumber}</gsm>
+                <encoding>TR</encoding>
+                <appkey>${appKey}</appkey>
+            </ns3:smsGonder1NV2>
+        </SOAP-ENV:Body>
+      </SOAP-ENV:Envelope>`;
+
+    // Send the SOAP request using axios
+    const response = await axios.post('http://soap.netgsm.com.tr:8080/Sms_webservis/SMS?wsdl', soapXML, {
+      headers: {
+        'Content-Type': 'text/xml',
+        'SOAPAction': ''
+      }
+    });
+
+    // Handle response (Optional: use xml2js to parse the response)
+    console.log('SMS Response:', response.data);
+
+    // Return success message after sending SMS
+    return res.status(200).json({ success: true, message: 'Payment confirmed. Admin notified via SMS.' });
+  } catch (error) {
+    console.error('Error confirming payment and sending SMS:', error);
+    return res.status(500).json({ error: 'Error confirming payment.' });
+  }
+};
+

@@ -30,7 +30,21 @@ const AdsPackageSchema = new mongoose.Schema({
         enum: ['Active', 'Inactive'],
         default: 'Inactive'
     },
+    resumeViews: {
+        type: Number,
+        required: true,
+    },
+    packageDuration: {
+        type: Number,
+        required: true,
+    },
     //add user obj id so that it gets enrolled when company purchased a pack
+    enrolledCompanies: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+    ],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Package', AdsPackageSchema);
