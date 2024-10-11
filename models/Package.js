@@ -27,7 +27,7 @@ const AdsPackageSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Active', 'Inactive'],
+        enum: ['Inctive','Active'],
         default: 'Inactive'
     },
     resumeViews: {
@@ -38,11 +38,16 @@ const AdsPackageSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    paymentStatus: {
+        type: String,
+        enum: ['Unpurchased', 'Requested', 'Approved', 'Rejected'],
+        default: 'Unpurchased',
+    },
     //add user obj id so that it gets enrolled when company purchased a pack
     enrolledCompanies: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "CompanyProfile",
         },
     ],
 }, { timestamps: true });

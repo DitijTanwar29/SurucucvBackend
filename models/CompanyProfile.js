@@ -39,6 +39,17 @@ const companyProfileSchema = new mongoose.Schema({
     companyBackgroundIcon: {
         type: String,
     },
-    
+    paymentStatus: {
+        type: String,
+        enum: ["Unpurchased", "Requested", "Approved", "Rejected"],
+        default: "Unpurchased",
+    },
+    // New field to store the ObjectId of the package they are paying for
+    package: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Package",
+                }
+    ],
 });
 module.exports = mongoose.model("CompanyProfile", companyProfileSchema);

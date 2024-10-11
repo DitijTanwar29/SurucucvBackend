@@ -1,4 +1,6 @@
 const Package = require("../models/Package");
+const nodemailer = require("nodemailer")
+const CompanyProfile = require("../models/CompanyProfile")
 
 exports.createPackage = async (req, res) => {
   try {
@@ -290,16 +292,133 @@ const netgsmPassword = "W5-1vhsX";
 const smsHeader = "ADRTURKLTD.";
 const appKey = "01007a72af089606218e04d553a740f5";
 
-// Handle payment confirmation and send SMS to admin
-exports.confirmPayment = async (req, res) => {
+// Handle payment confirmation approval SMS to admin
+// exports.paymentApprovalSms = async (req, res) => {
+//   try {
+//     const { packageName, user, packageId, companyProfileId } = req.body;
+//     console.log("packageId from req.bpdy.props : ",packageName,"user from req body props : ",user)
+
+//     company = CompanyProfile.findById(companyProfileId);
+    
+//     console.log(company)
+//     const updatedStatus = "Requested";
+
+//     const updatedPaymentStatus = await CompanyProfile.findByIdAndUpdate(companyProfileId,
+//        {paymentStatus :updatedStatus},
+//         {new:true},
+//        )
+
+//        await updatedPaymentStatus.save()
+
+//        console.log(updatedPaymentStatus)
+
+       
+//       await CompanyProfile.findByIdAndUpdate(companyProfileId,
+//         //add the package to the companyProfile schema 
+//        {
+//         $push: {
+//             package: packageId,
+//         }
+//         },{new:true})
+ 
+// //     const companyProfileDetails = await CompanyProfile.findById(profileId);
+
+// //     console.log("userDetails",userDetails);
+
+// //     const accountType = userDetails.accountType
+// //     console.log("accountType : ",accountType)
+// //     const user = await User.findByIdAndUpdate(id, {
+// //       name,
+// //       email, contactNumber,
+// //       companyTitle,
+// //       accountType
+// //     })
+
+// //     await user.save()
+// // console.log("user :",user)
+
+
+//     console.log("company.paymentStatus - ",company.paymentStatus)
+
+//     // Logic to verify payment details and save the payment information
+//     // Save to your database (e.g., Payments model) and mark payment as pending approval
+
+
+//     // Construct SOAP XML body for Netgsm API
+//     const message = `Payment received for Package Name: ${packageName} from User: ${user}. Please review and approve.`;
+//     const soapXML = `<?xml version="1.0"?>
+//       <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+//            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+//            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+//         <SOAP-ENV:Body>
+//             <ns3:smsGonder1NV2 xmlns:ns3="http://sms/">
+//                 <username>${netgsmUsername}</username>
+//                 <password>${netgsmPassword}</password>
+//                 <header>${smsHeader}</header>
+//                 <msg>${message}</msg>
+//                 <gsm>${adminPhoneNumber}</gsm>
+//                 <encoding>TR</encoding>
+//                 <appkey>${appKey}</appkey>
+//             </ns3:smsGonder1NV2>
+//         </SOAP-ENV:Body>
+//       </SOAP-ENV:Envelope>`;
+
+//     // Send the SOAP request using axios
+//     const response = await axios.post('http://soap.netgsm.com.tr:8080/Sms_webservis/SMS?wsdl', soapXML, {
+//       headers: {
+//         'Content-Type': 'text/xml',
+//         'SOAPAction': ''
+//       }
+//     });
+
+//     // Handle response (Optional: use xml2js to parse the response)
+//     console.log('SMS Response:', response.data);
+
+//     // Return success message after sending SMS
+//     return res.status(200).json({ success: true, message: 'Payment confirmed. Admin notified via SMS.',
+//   data: updatedPaymentStatus });
+//   } catch (error) {
+//     console.error('Error confirming payment and sending SMS:', error);
+//     return res.status(500).json({ error: 'Error confirming payment.' });
+//   }
+// };
+
+exports.paymentApprovalSms = async (req, res) => {
   try {
-    const { packageName, user, paymentDetails } = req.body;
-    console.log("packageId from req.bpdy.props : ",packageName,"user from req body props : ",user)
-    // Logic to verify payment details and save the payment information
-    // Save to your database (e.g., Payments model) and mark payment as pending approval
+    const { packageName, user, packageId, companyProfileId } = req.body;
+    console.log("Package Name from req.body: ", packageName, "User from req body: ", user);
+
+    // Find the company by its ID
+    const company = await CompanyProfile.findById(companyProfileId);
+
+    if (!company) {
+      return res.status(404).json({ error: 'Company profile not found.' });
+    }
+
+    // Update payment status to 'Requested'
+    const updatedPaymentStatus = await CompanyProfile.findByIdAndUpdate(
+      companyProfileId,
+      { paymentStatus: "Requested" },
+      { new: true }
+    );
+
+    console.log("Updated Payment Status: ", updatedPaymentStatus);
+
+    // Push the package to the companyProfile schema (ensure 'package' is an array in the schema)
+    await CompanyProfile.findByIdAndUpdate(
+      companyProfileId,
+      {
+        $push: {
+          package: packageId,
+        }
+      },
+      { new: true }
+    );
+
+    // Create the message for SMS
+    const message = `Payment received for Package Name: ${packageName} from User: ${user}. Please review and approve.`;
 
     // Construct SOAP XML body for Netgsm API
-    const message = `Payment received for Package Name: ${packageName} from User: ${user}. Please review and approve.`;
     const soapXML = `<?xml version="1.0"?>
       <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -325,14 +444,198 @@ exports.confirmPayment = async (req, res) => {
       }
     });
 
-    // Handle response (Optional: use xml2js to parse the response)
+    // Handle response
     console.log('SMS Response:', response.data);
 
     // Return success message after sending SMS
-    return res.status(200).json({ success: true, message: 'Payment confirmed. Admin notified via SMS.' });
+    return res.status(200).json({
+      success: true,
+      message: 'Payment confirmed. Admin notified via SMS.',
+      data: updatedPaymentStatus
+    });
   } catch (error) {
     console.error('Error confirming payment and sending SMS:', error);
     return res.status(500).json({ error: 'Error confirming payment.' });
   }
 };
 
+
+exports.approvePaymentRequest = async (req, res) => {
+  try {
+    const { companyId, packageId } = req.body;
+
+    // Find the company profile and update the payment status to 'Approved'
+    const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+      companyId,
+      {
+        $addToSet: { package: packageId }, // Add the package to the array
+        paymentStatus: "Approved"
+      },
+      { new: true }
+    );
+
+    if (!updatedCompany) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // Find the package and enroll the company
+    const updatedPackage = await Package.findByIdAndUpdate(
+      packageId,
+      {
+        $addToSet: { enrolledCompanies: companyId } // Add the company to enrolled companies
+      },
+      { new: true }
+    );
+
+    if (!updatedPackage) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+
+    // Send approval email to the company
+    await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
+
+    // Return success response
+    res.json({ message: "Payment approved and company enrolled." });
+  } catch (error) {
+    console.error("Error approving payment request:", error);
+    res.status(500).json({ error: "Error approving payment." });
+  }
+};
+
+
+
+// Function to send approval email
+const sendApprovalEmail = async (email, companyName) => {
+  try{
+
+    let transporter = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    },
+    secure: false,
+  });
+  console.log(email,"    ",companyName)
+  console.log("inside send approval email function")
+  let mailOptions = await transporter.sendMail({
+    from: `"SurucuCv" <${process.env.MAIL_USER}>`,
+    to: email,
+    subject: 'Payment Request Approved',
+    text: `Dear ${companyName},\n\nYour payment request has been approved.\n\nThank you for choosing us.`
+  });
+  
+  console.log(mailOptions.response);
+  return mailOptions
+}
+catch (error){
+  console.log(error.message)
+  return error.message
+}
+};
+
+
+// Controller for rejecting payment
+exports.rejectPayment = async (req, res) => {
+  try {
+    const { companyId, packageId } = req.body;
+
+    // Find the company profile and pop the package
+    const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+      companyId,
+      {
+        $pull: { package: packageId }, // Pop the package from the array
+        paymentStatus: "Rejected"
+      },
+      { new: true }
+    );
+
+    if (!updatedCompany) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+
+    // Send rejection email to the company
+    await sendRejectionEmail(updatedCompany.email, updatedCompany.name);
+
+    res.json({ message: 'Payment rejected and package removed.' });
+  } catch (error) {
+    console.error('Error rejecting payment:', error);
+    res.status(500).json({ error: 'Error rejecting payment.' });
+  }
+};
+
+// Function to send rejection email
+const sendRejectionEmail = async (email, companyName) => {
+  // Use your email service provider to send the email
+  let transporter = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    },
+    secure:false,
+  });
+
+  let mailOptions =  await transporter.sendMail({
+    from: `"SurucuCv" <${process.env.MAIL_USER}>`,
+    to: email,
+    subject: 'Payment Request Rejected',
+    text: `Dear ${companyName},\n\nYour payment request has been rejected.\n\nThank you.`
+  });
+  
+  console.log(mailOptions.response);
+  return mailOptions
+};
+
+
+exports.getCompaniesWithRequestedStatus = async (req, res) => {
+  try {
+    // Fetch all companies where the paymentStatus is 'Requested'
+    const companies = await CompanyProfile.find({ paymentStatus: "Requested" }).populate();
+
+    console.log(companies)
+    if (!companies) {
+      return res.status(404).json({ message: "No companies found with payment status 'Requested'" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Companies fetched successfully with payment status as 'Requested' ",
+      data:companies});
+  } catch (error) {
+    console.error("Error fetching companies with requested status:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+// exports.getCompaniesWithRequestedStatus = async (req, res) => {
+//   try {
+//     // Fetch all companies where the paymentStatus is 'Requested'
+//     const companies = await CompanyProfile.find({ paymentStatus: "Requested" }).populate("package"); // Populate package details
+
+//     if (!companies) {
+//       return res.status(404).json({ message: "No companies found with payment status 'Requested'" });
+//     }
+
+//     // Fetch the package details and include the package name
+//     const companiesWithPackage = await Promise.all(
+//       companies.map(async (company) => {
+//         const packageDetails = await Package.findById(company.package); // Assuming 'company.package' holds the packageId
+//         return {
+//           ...company.toObject(), // Convert company document to plain JS object
+//           packageName: packageDetails ? packageDetails.name : "N/A" // Include package name or fallback to 'N/A'
+//         };
+//       })
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Companies fetched successfully with payment status as 'Requested'",
+//       data: companiesWithPackage
+//     });
+//   } catch (error) {
+//     console.error("Error fetching companies with requested status:", error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };

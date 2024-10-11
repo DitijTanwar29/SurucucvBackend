@@ -4,7 +4,8 @@ const router = express.Router();
 //Job controllers Import
 const { createPackage, updateAdvertisingPackage, deleteAdvertisingPackage,
 showAllPackages, getPackageDetails, getActivePackages,updatePackageStatus,
-confirmPayment } = require("../controllers/Package")
+paymentApprovalSms, approvePaymentRequest, getCompaniesWithRequestedStatus,
+rejectPayment } = require("../controllers/Package")
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
@@ -17,5 +18,8 @@ router.get("/showAllPackages", showAllPackages);
 router.post("/getPackageDetails", getPackageDetails);
 router.get("/getActivPackages",getActivePackages);
 router.post("/updatePackageStatus", updatePackageStatus);
-router.post("/confirm-payment", confirmPayment);
+router.post("/payment-approval-sms", paymentApprovalSms);
+router.post("/approvePaymentRequest", approvePaymentRequest);
+router.post("/getCompaniesWithRequestedStatus",getCompaniesWithRequestedStatus);
+router.put("/rejectPaymentApprovalRequest", rejectPayment)
 module.exports = router;

@@ -19,12 +19,11 @@ const advertisementSchema = new mongoose.Schema({
         type: String,
         enum:["Active", "Inactive"],
     },
-    company: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        }
-    ]
+    company: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"User",
+        required: true,
+    }
 })
 
 module.exports = mongoose.model("Advertisement",advertisementSchema);
