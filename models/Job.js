@@ -29,10 +29,6 @@ const jobSchema = new mongoose.Schema({
         type: String,
         required:true,
     },
-    requiredSkills: {
-        type: [String],
-        required: true,
-    },
     requiredExperience: {
         type: Number,
     },

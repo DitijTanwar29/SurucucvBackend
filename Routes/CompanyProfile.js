@@ -6,6 +6,8 @@ const {
     updateCompanyProfile,
     updateDisplayPicture,
     deleteAccount,
+    getCompanyDetails,
+    getCompanyById,
 } = require("../controllers/CompanyProfile");
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -14,5 +16,7 @@ const {
 
 router.put("/updateCompanyProfile", auth, isCompany, updateCompanyProfile);
 router.put("/updateDisplayPicture", auth, updateDisplayPicture)
+router.get("/getCompanyDetails", auth, getCompanyDetails)
+router.post("/getCompanyById", getCompanyById)
 router.delete("/deleteAccount", auth, deleteAccount)
 module.exports = router;

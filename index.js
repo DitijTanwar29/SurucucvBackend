@@ -12,6 +12,7 @@ const jobRoutes = require('./Routes/Job');
 const resumeRoutes = require('./Routes/Resume');
 const sectorRoutes = require('./Routes/Sector')
 const packageRoutes = require('./Routes/Package')
+const AdvertisementRoutes = require('./Routes/Advertisement')
 const database = require("./config/database");
 const morgan = require("morgan");
 const bodyParser = require ("body-parser");
@@ -63,6 +64,7 @@ app.use("/api/v1/job",jobRoutes);
 app.use("/api/v1/resume",resumeRoutes);
 app.use("/api/v1/sector", sectorRoutes);
 app.use("/api/v1/package",packageRoutes);
+app.use("/api/v1/advertisement",AdvertisementRoutes)
 //default route
 app.get('/',(req,res)=>{
    res.send("Your server is up and running..");

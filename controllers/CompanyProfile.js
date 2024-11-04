@@ -7,13 +7,13 @@ exports.updateCompanyProfile = async (req, res) => {
     try{
         //get data
         const { 
-        name, email, position="", contactNumber, dateOfBirth="",
+        name="", email, position="", contactNumber, dateOfBirth="",
          companyTitle, sector, taxAdministration="",
           taxNumber, companyAddress="" } = req.body;
 
         // const profileImage = req.files.profileImage;
         // const coverImage = req.files.coverImage;
-        
+        console.log("name : ",name)
           //get userId
           const id = req.user.id;
         //validate data
@@ -109,6 +109,7 @@ exports.getCompanyDetails = async (req, res) => {
       const id = req.user.id
       const companyDetails = await User.findById(id)
         .populate("companyDetails")
+        .populate("employees")
         .exec()
       console.log(companyDetails)
       res.status(200).json({
@@ -277,4 +278,34 @@ exports.updateDisplayPicture = async (req, res) => {
   }
 }
 
+exports.getCompanyById = async (req, res) => {
+  try {
+    const { companyId } = req.params || req.body;
+
+    console.log("company Id: ", companyId)
+    // Fetch company details by companyId
+    const company = await CompanyProfile.findById(companyId);
+    console.log("company by Id : ",company)
+    if (!company) {
+      return res.status(404).json({ success: false, message: "Company not found" });
+    }
+
+    // Structure the response, including employees
+    res.json({
+      success: true,
+      data: {
+        companyTitle: company.companyTitle,
+        sector: company.sector,
+        taxAdministration: company.taxAdministration,
+        taxNumber: company.taxNumber,
+        companyAddress: company.companyAddress,
+        employees: company.employees, // Returning employees array with contactPerson flag
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching company details:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+
+}
 

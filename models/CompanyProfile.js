@@ -44,6 +44,13 @@ const companyProfileSchema = new mongoose.Schema({
         enum: ["Unpurchased", "Requested", "Approved", "Rejected"],
         default: "Unpurchased",
     },
+    
+    employees: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Employee'  // Reference to Employee model
+        }    
+    ],
     // New field to store the ObjectId of the package they are paying for
     package: [
                 {

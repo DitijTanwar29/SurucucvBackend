@@ -495,10 +495,12 @@ exports.approvePaymentRequest = async (req, res) => {
     await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
 
     // Return success response
-    res.json({ message: "Payment approved and company enrolled." });
+    return res.status(200).json({
+      success:true,
+       message: "Payment approved and company enrolled." });
   } catch (error) {
     console.error("Error approving payment request:", error);
-    res.status(500).json({ error: "Error approving payment." });
+    return res.status(500).json({ error: "Error approving payment." });
   }
 };
 
