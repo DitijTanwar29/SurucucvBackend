@@ -5,6 +5,10 @@ const { Schema } = mongoose;
 const advertisementSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
+  icon: {
+    type: String,
+    required: true,
+},
   company: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true }, // Derived from start date + publication period

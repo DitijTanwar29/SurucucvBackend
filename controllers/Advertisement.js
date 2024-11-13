@@ -3,6 +3,8 @@ const Advertisement = require('../models/Advertisement');
 const CompanyProfile = require('../models/CompanyProfile');
 const Company = require('../models/CompanyProfile');
 const User = require('../models/User')
+const {uploadImageToCloudinary} = require("../utils/imageUploader");
+
 // Controller: createAdvertisement
 exports.createAdvertisement = async (req, res) => {
   try {
@@ -13,8 +15,25 @@ exports.createAdvertisement = async (req, res) => {
       publicationPeriod, 
       homePageDuration 
     } = req.body;
+
+    const icon = req.files.adIcon;
+    console.log("REQUEST.FILES,SERVICEICON",req.files.adIcon);
+
     
     const userId = req.user.id;
+
+      //validate data
+      if(
+        !title ||
+        !description ||
+        !icon ||
+        !startDate
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "All fields are required",
+        });
+    }
 
     // Calculate end date
     const endDate = new Date(startDate);
@@ -60,6 +79,9 @@ exports.createAdvertisement = async (req, res) => {
       });
     }
 
+    //upload serviceIcon to cloudinary
+    const adIcon = await uploadImageToCloudinary(icon, process.env.FOLDER_NAME);
+
     const newAd = new Advertisement({
       title,
       description,
@@ -70,6 +92,7 @@ exports.createAdvertisement = async (req, res) => {
       homePageDuration,
       package: activePackage._id,
       status: "Inactive", // Default status
+      icon: adIcon.secure_url,
     });
 
     await newAd.save();
