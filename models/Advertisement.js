@@ -9,7 +9,7 @@ const advertisementSchema = new Schema({
     type: String,
     required: true,
 },
-  company: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  company: { type: Schema.Types.ObjectId, ref: 'CompanyProfile', required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true }, // Derived from start date + publication period
   publicationPeriod: { type: Number, required: true }, // In days

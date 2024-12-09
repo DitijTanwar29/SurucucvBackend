@@ -15,7 +15,8 @@ exports.createPackage = async (req, res) => {
       endDate,
       status,
       resumeViews,
-      packageDuration
+      packageDuration,
+      paymentStatus
     } = req.body;
 
     // validate data
@@ -40,7 +41,7 @@ exports.createPackage = async (req, res) => {
     if (!status || status === undefined) {
       status = "Inactive";
     }
-
+    
     // const newPackage = new Packages(req.body);
     const newPackage = await Package.create({
       packageName: packageName,
@@ -398,22 +399,35 @@ exports.paymentApprovalSms = async (req, res) => {
     // Update payment status to 'Requested'
     const updatedPaymentStatus = await CompanyProfile.findByIdAndUpdate(
       companyProfileId,
-      { paymentStatus: "Requested" },
+      { 
+        paymentStatus: "Requested",
+        requestedPackage: packageId, // Store the requested package ID
+      },      
       { new: true }
     );
 
     console.log("Updated Payment Status: ", updatedPaymentStatus);
 
-    // Push the package to the companyProfile schema (ensure 'package' is an array in the schema)
-    await CompanyProfile.findByIdAndUpdate(
-      companyProfileId,
+    const updatedPaymentStatusInsidePack = await Package.findByIdAndUpdate(
+      packageId,
       {
-        $push: {
-          package: packageId,
-        }
+        paymentStatus: "Requested",
       },
       { new: true }
     );
+
+    console.log("Updated Payment Status In Package: ", updatedPaymentStatusInsidePack);
+    
+    // // Push the package to the companyProfile schema (ensure 'package' is an array in the schema)
+    // await CompanyProfile.findByIdAndUpdate(
+    //   companyProfileId,
+    //   {
+    //     $push: {
+    //       package: packageId,
+    //     }
+    //   },
+    //   { new: true }
+    // );
 
     // Create the message for SMS
     const message = `Payment received for Package Name: ${packageName} from User: ${user}. Please review and approve.`;
@@ -450,8 +464,9 @@ exports.paymentApprovalSms = async (req, res) => {
     // Return success message after sending SMS
     return res.status(200).json({
       success: true,
-      message: 'Payment confirmed. Admin notified via SMS.',
-      data: updatedPaymentStatus
+      message: 'Payment approval requested. Admin notified via SMS.',
+      data: { updatedPaymentStatus, updatedPaymentStatusInsidePack }
+  
     });
   } catch (error) {
     console.error('Error confirming payment and sending SMS:', error);
@@ -460,49 +475,371 @@ exports.paymentApprovalSms = async (req, res) => {
 };
 
 
+// exports.approvePaymentRequest = async (req, res) => {
+//   try {
+//     const { companyId, packageId } = req.body;
+
+//     // Find the company profile and update the payment status to 'Approved'
+//     const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+//       companyId,
+//       {
+//         $addToSet: { package: packageId }, // Add the package to the array
+//         paymentStatus: "Approved"
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedCompany) {
+//       return res.status(404).json({ error: "Company not found" });
+//     }
+
+//     // Find the package and enroll the company
+//     const updatedPackage = await Package.findByIdAndUpdate(
+//       packageId,
+//       {
+//         $addToSet: { enrolledCompanies: companyId } // Add the company to enrolled companies
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedPackage) {
+//       return res.status(404).json({ error: "Package not found" });
+//     }
+
+//     // Send approval email to the company
+//     await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
+
+//     // Return success response
+//     return res.status(200).json({
+//       success:true,
+//        message: "Payment approved and company enrolled." });
+//   } catch (error) {
+//     console.error("Error approving payment request:", error);
+//     return res.status(500).json({ error: "Error approving payment." });
+//   }
+// };
+
+// exports.approvePaymentRequest = async (req, res) => {
+//   try {
+//     const { companyId, packageId } = req.body;
+
+//     console.log("Approving Payment Request...");
+//     console.log("Company ID:", companyId);
+//     console.log("Package ID:", packageId);
+
+//     // Update the company's payment status and add the package
+//     const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+//       companyId,
+//       {
+//         $addToSet: { package: packageId }, // Add package ID to array
+//         paymentStatus: "Approved",        // Update payment status
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedCompany) {
+//       console.error("Company not found.");
+//       return res.status(404).json({ error: "Company not found" });
+//     }
+
+//     console.log("Updated Company:", updatedCompany);
+
+//     // Update the package to enroll the company
+//     const updatedPackage = await Package.findByIdAndUpdate(
+//       packageId,
+//       {
+//         $addToSet: { enrolledCompanies: companyId }, // Add company ID to array
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedPackage) {
+//       console.error("Package not found.");
+//       return res.status(404).json({ error: "Package not found" });
+//     }
+
+//     console.log("Updated Package:", updatedPackage);
+
+//     // Send approval email
+//     try {
+//       await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
+//       console.log("Approval email sent successfully.");
+//     } catch (emailError) {
+//       console.error("Error sending approval email:", emailError);
+//     }
+
+//     // Respond with success
+//     return res.status(200).json({
+//       success: true,
+//       message: "Payment approved and company enrolled.",
+//       data: updatedCompany
+//     });
+//   } catch (error) {
+//     console.error("Error approving payment request:", error);
+//     return res.status(500).json({ error: "Error approving payment." });
+//   }
+// };
+
+
+// USE THIS CONTROLLER AND CHECK THE 
+//PACKAGEID IN ABOVE REQUESTAPPROVESMS CONTROLLER
+//BCZ PACKID IS NOT STORING SO MAY BE THATS WHY AT THE TIME OF APPROVAL
+// PACKID IS UNDEFINED AND UNABLE TO APPROVE BY ADMIN AT THAT TIME SO
+//RESOLVE THIS THING 
 exports.approvePaymentRequest = async (req, res) => {
   try {
     const { companyId, packageId } = req.body;
 
-    // Find the company profile and update the payment status to 'Approved'
-    const updatedCompany = await CompanyProfile.findByIdAndUpdate(
-      companyId,
-      {
-        $addToSet: { package: packageId }, // Add the package to the array
-        paymentStatus: "Approved"
-      },
-      { new: true }
-    );
+    console.log("Approving Payment Request...");
+    console.log("Company ID:", companyId);
+    console.log("Package ID:", packageId);
 
-    if (!updatedCompany) {
-      return res.status(404).json({ error: "Company not found" });
+    // Validate company and package existence
+    const company = await CompanyProfile.findById(companyId);
+    const packageData = await Package.findById(packageId);
+
+    if (!company) {
+      return res.status(404).json({ success: false, message: "Company not found" });
     }
 
-    // Find the package and enroll the company
+    if (!packageData) {
+      return res.status(404).json({ success: false, message: "Package not found" });
+    }
+
+
+    // Check if payment status for the package is already approved
+    //need to add some changes here if someone send more purchase request 
+    //then what to do in this validation 
+    if (packageData.paymentStatus === "Approved") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment request is already approved for this package.",
+      });
+    }
+
+    // Update the package with company enrollment and payment status
     const updatedPackage = await Package.findByIdAndUpdate(
       packageId,
       {
-        $addToSet: { enrolledCompanies: companyId } // Add the company to enrolled companies
+        $addToSet: { enrolledCompanies: companyId }, // Add company to enrolledCompanies
+        paymentStatus: "Approved", // Update payment status
       },
       { new: true }
     );
 
-    if (!updatedPackage) {
-      return res.status(404).json({ error: "Package not found" });
+    // Update the company with the package reference and payment status
+    const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+      companyId,
+      {
+        $addToSet: { package: packageId }, // Add package to the company
+        paymentStatus: "Approved", // Update payment status
+        requestedPackage: null,
+      },
+      { new: true }
+    );
+
+    console.log("Updated Company:", updatedCompany);
+    console.log("Updated Package:", updatedPackage);
+
+    // Send approval email (optional)
+    try {
+      await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
+      console.log("Approval email sent successfully.");
+    } catch (emailError) {
+      console.error("Error sending approval email:", emailError);
     }
 
-    // Send approval email to the company
-    await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
-
-    // Return success response
+    // Respond with success
     return res.status(200).json({
-      success:true,
-       message: "Payment approved and company enrolled." });
+      success: true,
+      message: "Payment approved, and company enrolled successfully.",
+      data: { updatedCompany, updatedPackage },
+    });
   } catch (error) {
     console.error("Error approving payment request:", error);
-    return res.status(500).json({ error: "Error approving payment." });
+    return res.status(500).json({ success: false, message: "Error approving payment." });
   }
 };
+//code above is fine but new is updated with more validations 
+
+// exports.approvePaymentRequest = async (req, res) => {
+//   try {
+//     const { companyId, packageId } = req.body;
+
+//     console.log("Approving Payment Request...");
+//     console.log("Company ID:", companyId);
+//     console.log("Package ID:", packageId);
+
+//     // Validate company and package existence
+//     const company = await CompanyProfile.findById(companyId);
+//     const packageData = await Package.findById(packageId);
+
+//     if (!company) {
+//       return res.status(404).json({ success: false, message: "Company not found" });
+//     }
+
+//     if (!packageData) {
+//       return res.status(404).json({ success: false, message: "Package not found" });
+//     }
+
+//     // Check if the package is already approved for this company
+//     if (packageData.enrolledCompanies.includes(companyId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "This package is already approved for the company.",
+//       });
+//     }
+
+//     // Check if the company already has an active package and handle upgrades
+//     const activePackages = await Package.find({
+//       _id: { $in: company.package }, // Check the packages linked to the company
+//       paymentStatus: "Approved",
+//     });
+
+//     if (activePackages.length > 0) {
+//       // Handle the upgrade scenario
+//       return res.status(400).json({
+//         success: false,
+//         message: "The company already has an active package. Please handle the upgrade scenario.",
+//       });
+//     }
+
+//     // Approve the payment request
+//     const updatedPackage = await Package.findByIdAndUpdate(
+//       packageId,
+//       {
+//         $addToSet: { enrolledCompanies: companyId }, // Add company to enrolledCompanies
+//         paymentStatus: "Approved", // Update payment status
+//       },
+//       { new: true }
+//     );
+
+//     // Update the company with the approved package reference
+//     const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+//       companyId,
+//       {
+//         $addToSet: { package: packageId }, // Add package to the company
+//         paymentStatus: "Approved", // Update payment status
+//       },
+//       { new: true }
+//     );
+
+//     console.log("Updated Company:", updatedCompany);
+//     console.log("Updated Package:", updatedPackage);
+
+//     // Send approval email (optional)
+//     try {
+//       await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
+//       console.log("Approval email sent successfully.");
+//     } catch (emailError) {
+//       console.error("Error sending approval email:", emailError);
+//     }
+
+//     // Respond with success
+//     return res.status(200).json({
+//       success: true,
+//       message: "Payment approved, and company enrolled successfully.",
+//       data: { updatedCompany, updatedPackage },
+//     });
+//   } catch (error) {
+//     console.error("Error approving payment request:", error);
+//     return res.status(500).json({ success: false, message: "Error approving payment." });
+//   }
+// };
+// updated this api check chatgpt and remove above controller use new its 
+//adding package id event after not approving second payment request or 3rd 4th 5tt
+
+// exports.approvePaymentRequest = async (req, res) => {
+//   try {
+//     const { companyId, packageId } = req.body;
+
+//     console.log("Approving Payment Request...");
+//     console.log("Company ID:", companyId);
+//     console.log("Package ID:", packageId);
+
+//     // Validate company existence
+//     const company = await CompanyProfile.findById(companyId);
+//     if (!company) {
+//       return res.status(404).json({ success: false, message: "Company not found." });
+//     }
+
+//     // Validate package existence
+//     const packageData = await Package.findById(packageId);
+//     if (!packageData) {
+//       return res.status(404).json({ success: false, message: "Package not found." });
+//     }
+
+//     // Check if the package is already approved for this company
+//     if (packageData.enrolledCompanies.includes(companyId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "This package is already approved for the company.",
+//       });
+//     }
+
+//     // Check if the company already has an active package
+//     const activePackages = await Package.find({
+//       _id: { $in: company.package }, // Check the packages linked to the company
+//       paymentStatus: "Approved",
+//     });
+
+//     if (activePackages.length > 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "The company already has an active package. Please handle the upgrade scenario.",
+//       });
+//     }
+
+//     // Proceed to approve payment
+//     const updatedPackage = await Package.findByIdAndUpdate(
+//       packageId,
+//       {
+//         $addToSet: { enrolledCompanies: companyId }, // Add company to enrolledCompanies
+//         paymentStatus: "Approved", // Update payment status
+//       },
+//       { new: true }
+//     );
+
+//     // If package update fails, return an error
+//     if (!updatedPackage) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Error updating the package. Please try again.",
+//       });
+//     }
+
+//     // Update the company profile only after package is successfully updated
+//     const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+//       companyId,
+//       {
+//         $addToSet: { package: packageId }, // Add package to the company
+//         paymentStatus: "Approved", // Update payment status
+//       },
+//       { new: true }
+//     );
+
+//     console.log("Updated Company:", updatedCompany);
+//     console.log("Updated Package:", updatedPackage);
+
+//     // Send approval email (optional)
+//     try {
+//       await sendApprovalEmail(updatedCompany.email, updatedCompany.name);
+//       console.log("Approval email sent successfully.");
+//     } catch (emailError) {
+//       console.error("Error sending approval email:", emailError);
+//     }
+
+//     // Respond with success
+//     return res.status(200).json({
+//       success: true,
+//       message: "Payment approved, and company enrolled successfully.",
+//       data: { updatedCompany, updatedPackage },
+//     });
+//   } catch (error) {
+//     console.error("Error approving payment request:", error);
+//     return res.status(500).json({ success: false, message: "Error approving payment." });
+//   }
+// };
 
 
 
@@ -546,7 +883,7 @@ exports.rejectPayment = async (req, res) => {
     const updatedCompany = await CompanyProfile.findByIdAndUpdate(
       companyId,
       {
-        $pull: { package: packageId }, // Pop the package from the array
+        $pull: { requestedPackage: packageId }, // Pop the package from the array
         paymentStatus: "Rejected"
       },
       { new: true }

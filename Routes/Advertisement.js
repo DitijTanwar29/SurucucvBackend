@@ -9,7 +9,8 @@ const {
     showAllAds,
     getAdById,
     approveAnAdPost,
-    getActiveAds
+    getActiveAds,
+    getAdvertisementsByCompany
 } = require("../controllers/Advertisement");
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -23,6 +24,7 @@ router.post("/getAdDetails",getAdById)
 router.get("/getActiveAds",getActiveAds);
 router.get("/showAllAds", showAllAds);
 router.post("/approveAnAdPost", auth, isAdmin, approveAnAdPost);
+router.post("/getAdvertisementsByCompany", getAdvertisementsByCompany);
 
 //todo testing of delete api is pending
 module.exports = router;

@@ -58,5 +58,9 @@ const companyProfileSchema = new mongoose.Schema({
                     ref: "Package",
                 }
     ],
+    requestedPackage: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Package",
+    }],
 });
 module.exports = mongoose.model("CompanyProfile", companyProfileSchema);

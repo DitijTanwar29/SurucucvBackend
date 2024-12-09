@@ -4,165 +4,8 @@ const Service = require("../models/Service");
 const mailSender = require("../utils/mailSender")
 const Sector = require("../models/Sector")
 const mongoose = require("mongoose");
-
-// exports.createJob = async (req, res) => {
-//     try{
-//         //fetch data
-//         const userId = req.user.id;
-//         console.log("Request body : ",req.body)
-//         const {
-//             title, description, service, requiredExperience, 
-//             location,companyName, salaryRange, salaryType, 
-//             vacancy, startDate, endDate, jobType, status,
-//             licenseType="",srcBox,isSrc1,isSrc2,isSrc3,isSrc4,psikoteknik,adrDriverLicence, isCode95Document,
-//             passport,visa,abroadExperience,
-//             isBlindSpotTraining,isSafeDrivingTraining,isFuelEconomyTraining, isInternationalJob
-//         } = req.body;
-
-//         //validate data
-//         if(
-//             !title ||
-//             !description ||
-//             !requiredExperience ||
-//             !location ||
-//             !companyName ||
-//             !salaryRange ||
-//             !salaryType ||
-//             !vacancy ||
-//             !startDate ||
-//             !endDate ||
-//             !jobType ||
-//             !service ||
-//             !licenseType
-//             // !srcBox ||
-//             // !psikoteknik ||
-//             // !adrDriverLicence ||
-//             // !passport ||
-//             // !visa ||
-//             // !abroadExperience ||
-//             // !isBlindSpotTraining ||
-//             // !isSafeDrivingTraining ||
-//             // !isFuelEconomyTraining
-//         ) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message:"All fields are required",
-//             });
-//         }
-
-//         // check for companyDetails 
-//         const companyDetails = await User.findById(userId)
-//         .populate({path: "companyProfile",
-//         select: "package paymentStatus",
-//         });
-//         console.log("Company Details: ", companyDetails);
-
-//         if(!companyDetails){
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Company details not found",
-//             });
-//         }
-//         else if(!companyDetails?.package){
-//             return res.status(404).json({
-//                 success: false,
-//                 message:"Please get a package and try again."
-//             })
-//         }
-//         else{
-//             return res.status(400).json({
-//                 success: false,
-//                 message:"Payment status not approved, try again later."
-//             })
-//         }
-
-
-
-//         // if( !status || status === undefined) {
-//         //     status = "Inactive";
-//         // }
-
-//         //check given Service is valid or not
-//         const serviceDetails = await Service.findById(service);
-//         if(!serviceDetails) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'Service Details not found',
-//             });
-//         }
-
-//         //create an entry for new job
-//         const newJob = await Job.create({
-//             jobTitle : title,
-//             jobDescription: description,
-//             company: companyDetails._id,
-//             service: service,
-//             requiredExperience: requiredExperience,
-//             rangeOfSalary: salaryRange,
-//             salaryType: salaryType,
-//             jobLocation: location,
-//             companyName: companyName,
-//             numberOfVacancy: vacancy,
-//             startDate: startDate,
-//             endDate: endDate,
-//             jobType: jobType,
-//             licenseType:licenseType,
-//             // srcBox: srcBox,
-//             isSrc1: isSrc1,
-//             isSrc2: isSrc2,
-//             isSrc3: isSrc3,
-//             isSrc4: isSrc4,
-//             psikoteknik: psikoteknik,
-//             adrDrivingLicence: adrDriverLicence,
-//             isCode95Document: isCode95Document,
-//             passport: passport,
-//             visa: visa,
-//             abroadExperience: abroadExperience,
-//             isBlindSpotTraining: isBlindSpotTraining,
-//             isSafeDrivingTraining: isSafeDrivingTraining,
-//             isFuelEconomyTraining: isFuelEconomyTraining,
-//             isInternationalJob: isInternationalJob,
-//             status: status,
-//         })
-
-//         console.log(" New Job details : ",newJob)
-//         //add new job to the user schema of company
-//         await User.findByIdAndUpdate(
-//             {_id: companyDetails._id},
-//             {
-//                 $push: {
-//                     jobs: newJob._id,
-//                 }
-//             },
-//             {new: true},
-//         );
-        
-//         //update the service schema i.e adding new job to the services
-//         await Service.findByIdAndUpdate(
-//             {_id: service},
-//             {
-//                 $push: {
-//                     jobs: newJob._id,
-//                 }
-//             },
-//             {new: true},
-//         );
-
-//         //return res
-//         return res.status(200).json({
-//             success:true,
-//             message:'Request for Job createation sent successfully',
-//             data:newJob,
-//         });
-//     }catch(error){
-//         console.error(error);
-//         return res.status(500).json({
-//             success:false,
-//             message:'Failed to create job',
-//             error:error.message,
-//         })
-//     }
-// }
+const CompanyProfile = require("../models/CompanyProfile");
+const Package = require("../models/Package")
 
 exports.createJob = async (req, res) => {
     try {
@@ -209,30 +52,32 @@ exports.createJob = async (req, res) => {
       }
   
       // Check for company details and package status
-      const companyDetails = await User.findById(userId)
+      const userDetails = await User.findById(userId)
         .populate({
           path: "companyProfile",
           select: "package paymentStatus",
           populate: { path: "package", select: "_id" }
         });
   
-      if (!companyDetails || !companyDetails.companyProfile) {
+      if (!userDetails || !userDetails.companyDetails) {
         return res.status(404).json({
           success: false,
           message: "Company details not found",
         });
       }
   
-      const { companyProfile } = companyDetails;
-  
-      if (!companyProfile.package) {
+      console.log(userDetails)
+      console.log(userDetails?.companyDetails)
+const companyProfileId = userDetails?.companyDetails;
+const companyProfileDetails = await CompanyProfile.findById(companyProfileId)
+      if (companyProfileDetails?.package === 0) {
         return res.status(404).json({
           success: false,
           message: "Please get a package and try again."
         });
       }
   
-      if (companyProfile.paymentStatus !== 'Approved') {
+      if (companyProfileDetails.paymentStatus !== 'Approved') {
         return res.status(400).json({
           success: false,
           message: "Payment status not approved, try again later."
@@ -247,12 +92,28 @@ exports.createJob = async (req, res) => {
           message: "Service Details not found",
         });
       }
+
+      console.log(userDetails?.package)
+      const packageId = userDetails?.package;
+//finding package details
+const packageDetails = await Package.findById(packageId)
+console.log("package details oin job creation controller : ",packageDetails)
+ // Check job post limit
+ const jobCount = await Job.countDocuments({ company: companyProfileDetails._id });
+ if (jobCount >= packageDetails.jobPostLimit) {
+     return res.status(400).json({
+         success: false,
+         message: `Job post limit reached. Your limit is ${packageDetails.jobPostLimit}.`,
+     });
+ }
+
+ // Continue with job creation
   
-      // Create new job entry
+//       // Create new job entry
       const newJob = new Job({
         jobTitle: title,
         jobDescription: description,
-        company: companyDetails._id,
+        company: companyProfileDetails._id,
         service,
         requiredExperience,
         rangeOfSalary: salaryRange,
@@ -285,7 +146,7 @@ exports.createJob = async (req, res) => {
   
       // Update user (company) with the new job
       await User.findByIdAndUpdate(
-        { _id: companyDetails._id },
+        { _id: userDetails._id },
         { $push: { jobs: newJob._id } },
         { new: true }
       );
@@ -311,7 +172,7 @@ exports.createJob = async (req, res) => {
       });
     }
   };
-  
+
 //TODO : POSTMAN AND ROUTE IS PENDING FOR EDIT APII
 exports.updateJob = async (req, res) => {
     try{
@@ -382,6 +243,69 @@ exports.showAllJobs = async (req, res) => {
             message:"Cannot fetch jobs data",
         });
 
+    }
+};
+//tested this api need ot add come alteratioon
+// here currently its bursting out in My Jobs on company dashboard
+exports.showJobsByUserOrCompany = async (req, res) => {
+    const { userId, companyId } = req.body;
+
+    try {
+        let jobs;
+
+        // Fetch jobs by companyId if provided
+        if (companyId) {
+            jobs = await Job.find({ company: companyId })
+                .sort({ publishedDate: -1 })
+                .populate({
+                    path: "company",
+                    populate: {
+                        path: "companyDetails",
+                    }
+                })
+                .populate("service")
+                .exec();
+        }
+        // Fetch jobs by userId if provided
+        else if (userId) {
+            const user = await User.findById(userId).populate({
+                path: "jobs",
+                populate: {
+                    path: "company",
+                    populate: {
+                        path: "companyDetails",
+                    }
+                }
+            }).populate("service");
+
+            jobs = user?.jobs || [];
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide either userId or companyId.",
+            });
+        }
+
+        // Check if there are any jobs found
+        if (!jobs || jobs.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No jobs found.",
+                data:[]
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Jobs fetched successfully.",
+            data: jobs,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Cannot fetch jobs data.",
+        });
     }
 };
 

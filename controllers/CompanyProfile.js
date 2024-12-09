@@ -3,6 +3,8 @@ const User = require("../models/User");
 const Sector = require("../models/Sector")
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 const Job = require("../models/Job")
+const Package = require("../models/Package")
+const mongoose = require("mongoose");
 exports.updateCompanyProfile = async (req, res) => {
     try{
         //get data
@@ -309,3 +311,76 @@ exports.getCompanyById = async (req, res) => {
 
 }
 
+exports.getCompanyPackages = async (req, res) => {
+  const { companyId } = req.body.companyId;
+console.log("inside backend request :", companyId)
+try {
+        // const { companyId } = req.body; // Assuming the frontend sends companyId in the request body
+
+
+        // Query the database to find the company by its ID
+        const company = await CompanyProfile.findById(companyId)
+            .populate("package")
+            .populate("requestedPackage");
+
+        // Handle the case where the company is not found
+        if (!company) {
+            return res.status(404).json({ success:false, message: "Company not found" });
+        }
+
+
+        console.log(company)
+        console.log("company.package",company.package)
+        console.log("company?.requestedPackage",company?.requestedPackage)
+
+        // Return the packages and requested packages
+        return res.status(200).json({ 
+          success:true,
+            packages: company.package, 
+            requestedPackages: company?.requestedPackage 
+        });
+    } catch (error) {
+        console.error("Error fetching company packages:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+exports.unenrollCompanyFromPackage = async (req, res) => {
+  try {
+    const { companyId, packageId } = req.body;
+
+    // Remove the package from the company
+    const updatedCompany = await CompanyProfile.findByIdAndUpdate(
+      companyId,
+      {
+        $pull: { package: packageId }, // Remove the package from the array
+      },
+      { new: true }
+    );
+
+    if (!updatedCompany) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // Remove the company from the package
+    const updatedPackage = await Package.findByIdAndUpdate(
+      packageId,
+      {
+        $pull: { enrolledCompanies: companyId }, // Remove the company from enrolled companies
+      },
+      { new: true }
+    );
+
+    if (!updatedPackage) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Company successfully unenrolled from the package.",
+    });
+  } catch (error) {
+    console.error("Error unenrolling company from package:", error);
+    return res.status(500).json({ error: "Error unenrolling company." });
+  }
+};

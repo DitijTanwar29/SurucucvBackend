@@ -6,104 +6,184 @@ const User = require('../models/User')
 const {uploadImageToCloudinary} = require("../utils/imageUploader");
 
 // Controller: createAdvertisement
-exports.createAdvertisement = async (req, res) => {
-  try {
-    const { 
-      title, 
-      description, 
-      startDate, 
-      publicationPeriod, 
-      homePageDuration 
-    } = req.body;
+// exports.createAdvertisement = async (req, res) => {
+//   try {
+//     const { 
+//       title, 
+//       description, 
+//       startDate, 
+//       publicationPeriod, 
+//       homePageDuration 
+//     } = req.body;
 
-    const icon = req.files.adIcon;
-    console.log("REQUEST.FILES,SERVICEICON",req.files.adIcon);
+//     const icon = req.files.adIcon;
+//     console.log("REQUEST.FILES,SERVICEICON",req.files.adIcon);
 
     
-    const userId = req.user.id;
+//     const userId = req.user.id;
 
-      //validate data
-      if(
-        !title ||
-        !description ||
-        !icon ||
-        !startDate
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields are required",
-        });
-    }
+//       //validate data
+//       if(
+//         !title ||
+//         !description ||
+//         !icon ||
+//         !startDate
+//     ) {
+//         return res.status(400).json({
+//             success: false,
+//             message: "All fields are required",
+//         });
+//     }
 
-    // Calculate end date
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + publicationPeriod);
+//     // Calculate end date
+//     const endDate = new Date(startDate);
+//     endDate.setDate(endDate.getDate() + publicationPeriod);
 
-    // Check for company's approved package
-    const company = await User.findById(userId)
-      .populate({
-        path: "companyProfile",
-        select: "package paymentStatus",
-        populate: { path: "package", select: "_id" }
+//     // Check for company's approved package
+//     const company = await User.findById(userId)
+//       .populate({
+//         path: "companyProfile",
+//         select: "package paymentStatus",
+//         populate: { path: "package", select: "_id" }
+//       });
+//       console.log("company details id i.e profile id : ",company?.companyDetails)
+//       const companyProfileId = company?.companyDetails
+//       const companyProfile = await CompanyProfile.findById(companyProfileId)
+//       console.log("company profile :",companyProfile)
+//     if (!companyProfile){
+//       return res.status(404).json({
+//         success: false,
+//         message: "Company profile details not found",
+//     });
+//     }
+//     console.log("company package log : ",companyProfile?.package)
+//     if(companyProfile?.package.length === 0){
+//       return res.status(404).json({
+//           success: false,
+//           message:"Please get a package and try again."
+//       })
+//   }
+//   if (companyProfile?.paymentStatus !== 'Approved'){
+//       return res.status(400).json({
+//           success: false,
+//           message:"Payment status not approved, try again later."
+//       })
+//   }
+
+
+//     const activePackage = companyProfile?.package.find(pkg => pkg._id);
+//     if (!activePackage || companyProfile.paymentStatus !== 'Approved') {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No approved package found.",
+//       });
+//     }
+
+//     //upload serviceIcon to cloudinary
+//     const adIcon = await uploadImageToCloudinary(icon, process.env.FOLDER_NAME);
+
+//     const newAd = new Advertisement({
+//       title,
+//       description,
+//       company: company._id,
+//       startDate,
+//       endDate,
+//       publicationPeriod,
+//       homePageDuration,
+//       package: activePackage._id,
+//       status: "Inactive", // Default status
+//       icon: adIcon.secure_url,
+//     });
+
+//     await newAd.save();
+//     return res.status(201).json({ 
+//       success: true, 
+//       message: 'Advertisement created', 
+//       data: newAd 
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ success: false, message: 'Server Error' });
+//   }
+// };
+
+//with limit of ads creation 
+exports.createAdvertisement = async (req, res) => {
+  try {
+      const userId = req.user.id;
+
+      // Fetch company details and package
+      const userDetails = await User.findById(userId).populate({
+          path: "companyProfile",
+          select: "package paymentStatus",
+          populate: { path: "package", select: "advertisingLimit" }
       });
-      console.log("company details id i.e profile id : ",company?.companyDetails)
-      const companyProfileId = company?.companyDetails
-      const companyProfile = await CompanyProfile.findById(companyProfileId)
-      console.log("company profile :",companyProfile)
-    if (!companyProfile){
-      return res.status(404).json({
-        success: false,
-        message: "Company profile details not found",
-    });
-    }
-    console.log("company package log : ",companyProfile?.package)
-    if(companyProfile?.package.length === 0){
-      return res.status(404).json({
-          success: false,
-          message:"Please get a package and try again."
-      })
-  }
-  if (companyProfile?.paymentStatus !== 'Approved'){
-      return res.status(400).json({
-          success: false,
-          message:"Payment status not approved, try again later."
-      })
-  }
 
+      if (!userDetails || !userDetails.companyProfile) {
+          return res.status(404).json({
+              success: false,
+              message: "Company details not found.",
+          });
+      }
 
-    const activePackage = companyProfile?.package.find(pkg => pkg._id);
-    if (!activePackage || companyProfile.paymentStatus !== 'Approved') {
-      return res.status(400).json({
-        success: false,
-        message: "No approved package found.",
+      const companyProfile = userDetails.companyProfile;
+      const packageDetails = companyProfile.package;
+
+      if (!packageDetails) {
+          return res.status(404).json({
+              success: false,
+              message: "Please purchase a package to proceed.",
+          });
+      }
+
+      // Check payment status
+      if (companyProfile.paymentStatus !== 'Approved') {
+          return res.status(400).json({
+              success: false,
+              message: "Payment status not approved.",
+          });
+      }
+
+      // Check advertising limit
+      const advertisementCount = await Advertisement.countDocuments({ company: companyProfile._id });
+      if (advertisementCount >= packageDetails.advertisingLimit) {
+          return res.status(400).json({
+              success: false,
+              message: `Advertisement limit reached. Your limit is ${packageDetails.advertisingLimit}.`,
+          });
+      }
+
+      // Continue with advertisement creation
+      const { title, description, icon, publicationPeriod, startDate, status } = req.body;
+
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + publicationPeriod);
+
+      const newAdvertisement = new Advertisement({
+          title,
+          description,
+          icon,
+          company: companyProfile._id,
+          publicationPeriod,
+          startDate,
+          endDate,
+          status,
       });
-    }
 
-    //upload serviceIcon to cloudinary
-    const adIcon = await uploadImageToCloudinary(icon, process.env.FOLDER_NAME);
+      await newAdvertisement.save();
 
-    const newAd = new Advertisement({
-      title,
-      description,
-      company: company._id,
-      startDate,
-      endDate,
-      publicationPeriod,
-      homePageDuration,
-      package: activePackage._id,
-      status: "Inactive", // Default status
-      icon: adIcon.secure_url,
-    });
-
-    await newAd.save();
-    return res.status(201).json({ 
-      success: true, 
-      message: 'Advertisement created', 
-      data: newAd 
-    });
+      return res.status(200).json({
+          success: true,
+          message: "Advertisement created successfully.",
+          data: newAdvertisement,
+      });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: 'Server Error' });
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: "Failed to create advertisement.",
+          error: error.message,
+      });
   }
 };
 
@@ -278,6 +358,42 @@ exports.showAllAds = async (req, res) => {
           message:"Cannot fetch ads data",
       });
 
+  }
+};
+
+exports.getAdvertisementsByCompany = async (req, res) => {
+  const { companyId } = req.body;
+
+  try {
+      if (!companyId) {
+          return res.status(400).json({ success: false, message: "Company ID is required." });
+      }
+
+      // Fetch advertisements by companyId
+      const advertisements = await Advertisement.find({ company: companyId })
+          .sort({ publishedDate: -1 })
+          .populate({
+              path: 'company',
+              select: 'companyTitle companyIcon companyBackgroundIcon',
+              populate: {
+                  path: 'sector',
+                  select: 'name'
+              }
+          })
+          .populate('package', 'packageName packagePrice discountedPrice');
+
+      if (!advertisements.length) {
+          return res.status(404).json({ success: false, message: "No advertisements found." });
+      }
+
+      return res.status(200).json({
+          success: true,
+          message: "Advertisements fetched successfully.",
+          data: advertisements
+      });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "Error fetching advertisements." });
   }
 };
 

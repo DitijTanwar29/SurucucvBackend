@@ -10,7 +10,7 @@ const { createJob, showAllJobs, updateJob, deleteJob, getJobDetails, approveAJob
     getTopJobPostings, searchJobs, getRecentlyPublishedJobs,
     getFullTimeJobs, getPartTimeJobs, getTopJobLocations,
     filterJobs, getInternationalJobs,
-    getJobsBySector , getJobsByProvince, getJobsByService } = require("../controllers/Job");
+    getJobsBySector , getJobsByProvince, getJobsByService, showJobsByUserOrCompany } = require("../controllers/Job");
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
@@ -23,6 +23,7 @@ const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
 //Service can only be created by Admin
 router.post("/createJob", auth , isCompany, createJob);
 router.get("/showAllJobs", showAllJobs);
+router.post("/showAllJobsByCompany", showJobsByUserOrCompany);
 router.post("/getJobDetails", getJobDetails);
 router.post("/editJob", auth, isCompany, updateJob);
 router.delete("/deleteJob", auth, isCompany, deleteJob);

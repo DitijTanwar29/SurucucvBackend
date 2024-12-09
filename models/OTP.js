@@ -209,6 +209,9 @@ const OTPSchema = new mongoose.Schema({
     required: function () {
       return this.accountType === "Candidate";
     },
+    unique: function () {
+      return this.accountType === "Candidate" && this.contactNumber != null;
+    },
   },
   otp: {
     type: String,
