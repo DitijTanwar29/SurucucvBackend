@@ -382,13 +382,10 @@ exports.getAdvertisementsByCompany = async (req, res) => {
           })
           .populate('package', 'packageName packagePrice discountedPrice');
 
-      if (!advertisements.length) {
-          return res.status(404).json({ success: false, message: "No advertisements found." });
-      }
 
       return res.status(200).json({
           success: true,
-          message: "Advertisements fetched successfully.",
+          message: advertisements.length ? "Advertisements fetched successfully." : "No advertisements found.",
           data: advertisements
       });
   } catch (error) {

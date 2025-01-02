@@ -66,8 +66,8 @@ exports.createJob = async (req, res) => {
         });
       }
   
-      console.log(userDetails)
-      console.log(userDetails?.companyDetails)
+      console.log("user Details log : ",userDetails)
+      console.log("company details inside user details : ",userDetails?.companyDetails)
 const companyProfileId = userDetails?.companyDetails;
 const companyProfileDetails = await CompanyProfile.findById(companyProfileId)
       if (companyProfileDetails?.package === 0) {
@@ -93,15 +93,17 @@ const companyProfileDetails = await CompanyProfile.findById(companyProfileId)
         });
       }
 
-      console.log(userDetails?.package)
-      const packageId = userDetails?.package;
+      console.log(companyProfileDetails)
+      console.log("companyProfileDetails?.package : ",companyProfileDetails?.package)
+      const packageId = companyProfileDetails?.package;
 //finding package details
 const packageDetails = await Package.findById(packageId)
 console.log("package details oin job creation controller : ",packageDetails)
+console.log("packageDetails?.jobPostLimit :",packageDetails?.jobPostLimit)
  // Check job post limit
  const jobCount = await Job.countDocuments({ company: companyProfileDetails._id });
- if (jobCount >= packageDetails.jobPostLimit) {
-     return res.status(400).json({
+ if (jobCount >= packageDetails?.jobPostLimit) {
+     return res.status(429).json({
          success: false,
          message: `Job post limit reached. Your limit is ${packageDetails.jobPostLimit}.`,
      });
@@ -114,6 +116,7 @@ console.log("package details oin job creation controller : ",packageDetails)
         jobTitle: title,
         jobDescription: description,
         company: companyProfileDetails._id,
+        companyImage: userDetails?.image,
         service,
         requiredExperience,
         rangeOfSalary: salaryRange,

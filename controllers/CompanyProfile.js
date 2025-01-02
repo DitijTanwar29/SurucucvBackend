@@ -282,7 +282,8 @@ exports.updateDisplayPicture = async (req, res) => {
 
 exports.getCompanyById = async (req, res) => {
   try {
-    const { companyId } = req.params || req.body;
+    const companyId  =  req.body.companyId;
+console.log("req body of company by id : ",req.body)
 
     console.log("company Id: ", companyId)
     // Fetch company details by companyId
