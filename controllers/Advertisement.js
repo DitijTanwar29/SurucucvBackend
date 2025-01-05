@@ -114,21 +114,25 @@ exports.createAdvertisement = async (req, res) => {
 
       // Fetch company details and package
       const userDetails = await User.findById(userId).populate({
-          path: "companyProfile",
-          select: "package paymentStatus",
-          populate: { path: "package", select: "advertisingLimit" }
+          path: "companyDetails",
+          select: "package paymentStatus advertisingLimit",
+          // populate: { path: "package", select: "advertisingLimit" }
       });
 
-      if (!userDetails || !userDetails.companyProfile) {
+      console.log("User Details : ",userDetails)
+
+      if (!userDetails || !userDetails.companyDetails) {
           return res.status(404).json({
               success: false,
               message: "Company details not found.",
           });
       }
 
-      const companyProfile = userDetails.companyProfile;
-      const packageDetails = companyProfile.package;
+      const companyProfile = userDetails.companyDetails;
+      const packageDetails = companyProfile?.package?.[0];
 
+      console.log("companyProfile :",companyProfile)
+      console.log("packageDetails : ",packageDetails)
       if (!packageDetails) {
           return res.status(404).json({
               success: false,
@@ -154,20 +158,28 @@ exports.createAdvertisement = async (req, res) => {
       }
 
       // Continue with advertisement creation
-      const { title, description, icon, publicationPeriod, startDate, status } = req.body;
+      const { title, description, publicationPeriod, startDate, status } = req.body;
+      
+      // console.log("req.file.adIcon : ",req.file.adIcon)
+      console.log("req.files : ",req.files.adIcon)
+      const icon = req.files.adIcon;
+      const adIcon = await uploadImageToCloudinary(icon, process.env.FOLDER_NAME);
 
+      //do it from here uploadimagetocloudinary noww
+// console.log(adIcon)
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + publicationPeriod);
 
       const newAdvertisement = new Advertisement({
           title,
           description,
-          icon,
+          icon:adIcon.secure_url,
           company: companyProfile._id,
           publicationPeriod,
           startDate,
           endDate,
           status,
+          package:packageDetails,
       });
 
       await newAdvertisement.save();
