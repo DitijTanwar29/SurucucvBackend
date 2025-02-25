@@ -38,7 +38,9 @@ exports.sendotp = async (req, res) => {
  
      // Save OTP to the database
      const otpPayload = { email, otp, accountType, contactNumber };
+     console.log('before otp');
      await OTP.create(otpPayload);
+     console.log('after otp');
 
  
      res.status(200).json({
