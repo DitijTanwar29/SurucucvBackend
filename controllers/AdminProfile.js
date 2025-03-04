@@ -2,8 +2,11 @@ const Service = require("../models/Service");
 const AdminProfile = require("../models/AdminProfile");
 const User = require("../models/User");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
-
-
+const HeroImage = require("../models/HeroImage");
+const fs = require("fs");
+const path = require("path");
+// const DEFAULT_HERO_IMAGE = require("../public/images/Driver-pro-logo.jfif"); // Replace with your actual default image URL
+const DEFAULT_HERO_IMAGE = "../public/images/Driver-pro-logo.jfif";
 exports.updateAdminProfile = async (req,res) => {
     try{
 
@@ -182,3 +185,96 @@ exports.updateDisplayPicture = async (req, res) => {
 }
 
 
+
+
+
+// Read the default image and convert it to Base64
+const DEFAULT_IMAGE_PATH = path.join(__dirname, "../public/images/Driver-pro-logo.jfif");
+let DEFAULT_IMAGE_BASE64 = "";
+
+try {
+  DEFAULT_IMAGE_BASE64 = fs.readFileSync(DEFAULT_HERO_IMAGE, { encoding: "base64" });
+} catch (error) {
+  console.error("Error reading default image:", error.message);
+}
+
+exports.uploadHeroImage = async (req, res) => {
+  try {
+    let imageUrl = `data:image/jpeg;base64,${DEFAULT_IMAGE_BASE64}`; // Default to local base64 image
+
+    if (req.file) {
+      const uploadResult = await uploadImageToCloudinary(req.file, "heroImages", 500, "auto");
+      imageUrl = uploadResult.secure_url;
+    }
+
+    let heroImage = await HeroImage.findOne();
+    if (heroImage) {
+      heroImage.imageUrl = imageUrl;
+      await heroImage.save();
+    } else {
+      heroImage = await HeroImage.create({ imageUrl });
+    }
+
+    res.status(200).json({ message: "Hero image updated successfully", imageUrl: heroImage.imageUrl });
+  } catch (error) {
+    res.status(500).json({ message: "Error uploading hero image", error: error.message });
+  }
+};
+// console.log(DEFAULT_IMAGE_PATH);
+// exports.getHeroImage = async (req, res) => {
+//   try {
+//     let heroImage = await HeroImage.findOne();
+
+//     if (!heroImage || !heroImage.imageUrl) {
+//       console.log("No uploaded hero image found, returning default image.");
+//       return res.status(200).json({
+//         success: true,
+//         imageUrl: `data:image/jpeg;base64,${DEFAULT_IMAGE_BASE64}`,
+//       });
+//     }
+
+//     console.log("Returning uploaded hero image:", heroImage.imageUrl);
+//     res.status(200).json({
+//       success: true,
+//       imageUrl: heroImage.imageUrl,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching hero image:", error.message);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error fetching hero image",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+//To Do: upload hero section image controllers -> chirag test them from here 
+exports.getHeroImage = async (req, res) => {
+  try {
+    let heroImage = await HeroImage.findOne();
+
+    if (!heroImage || !heroImage.imageUrl) {
+      console.log("No uploaded hero image found, returning default image.");
+
+      // Return the static URL of the default image
+      return res.status(200).json({
+        success: true,
+        imageUrl: "/public/images/Driver-pro-logo.jfif",
+      });
+    }
+
+    console.log("Returning uploaded hero image:", heroImage.imageUrl);
+    res.status(200).json({
+      success: true,
+      imageUrl: heroImage.imageUrl,
+    });
+  } catch (error) {
+    console.error("Error fetching hero image:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching hero image",
+      error: error.message,
+    });
+  }
+};

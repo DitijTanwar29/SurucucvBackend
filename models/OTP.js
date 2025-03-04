@@ -37,7 +37,7 @@ const OTPSchema = new mongoose.Schema({
 
 // Define a function to send emails
 async function sendVerificationEmail(email, otp) {
-  console.log(" otp inside sendVerificationEmail  : ",otp)
+  console.log(" otp inside sendVerificationEmail  : ", otp);
   try {
     const mailResponse = await mailSender(
       email,
@@ -68,7 +68,6 @@ OTPSchema.pre("save", async function (next) {
   }
   next();
 });
-
 
 const OTP = mongoose.model("OTP", OTPSchema);
 

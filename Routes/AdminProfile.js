@@ -6,7 +6,9 @@ const {
     getAdminDetails,
     updateAdminProfile,
     deleteAccount,
-    updateDisplayPicture
+    updateDisplayPicture,
+    uploadHeroImage,
+    getHeroImage
 } = require("../controllers/AdminProfile");
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -17,6 +19,8 @@ router.get("/getAdminDetails", auth, getAdminDetails)
 router.put("/updateAdminProfile", auth, isAdmin, updateAdminProfile);
 router.post("/deleteAccount", auth, deleteAccount);
 router.put("/updateDisplayPicture", auth, updateDisplayPicture)
+router.post("/upload-hero-image", auth, uploadHeroImage);
+router.get("/get-hero-image", getHeroImage);
 
 //todo testing of delete api is pending
 module.exports = router;
