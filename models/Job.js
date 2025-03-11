@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
 
+
 const jobSchema = new mongoose.Schema({
     
     service: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Service",
     },
-    company: {
+    company: {  
         type: mongoose.Schema.Types.ObjectId,
         ref:"User",
         required: true,
@@ -53,7 +54,7 @@ const jobSchema = new mongoose.Schema({
     },
     jobType: {
         type: String,
-        enum:["Full Time","Part Time","Internship","Temporary Job"],
+        enum: ["Full Time","Part Time","Internship","Temporary Job"],
     },
     status: {
         type: String,
