@@ -13,6 +13,7 @@ const resumeRoutes = require('./Routes/Resume');
 const sectorRoutes = require('./Routes/Sector')
 const packageRoutes = require('./Routes/Package')
 const AdvertisementRoutes = require('./Routes/Advertisement')
+const filtersRoutes = require('./Routes/Filters')
 const database = require("./config/database");
 const morgan = require("morgan");
 const bodyParser = require ("body-parser");
@@ -20,7 +21,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const {cloudinaryConnect} = require("./config/cloudinary");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv");   
 
 
 // port 
@@ -65,6 +66,7 @@ app.use("/api/v1/resume",resumeRoutes);
 app.use("/api/v1/sector", sectorRoutes);
 app.use("/api/v1/package",packageRoutes);
 app.use("/api/v1/advertisement",AdvertisementRoutes)
+app.use("/api/v1/filters",filtersRoutes)
 //default route
 app.get('/',(req,res)=>{
    res.send("Your server is up and running..");
