@@ -198,28 +198,28 @@ try {
   console.error("Error reading default image:", error.message);
 }
 
-exports.uploadHeroImage = async (req, res) => {
-  try {
-    let imageUrl = `data:image/jpeg;base64,${DEFAULT_IMAGE_BASE64}`; // Default to local base64 image
+// exports.uploadHeroImage = async (req, res) => {
+//   try {
+//     let imageUrl = `data:image/jpeg;base64,${DEFAULT_IMAGE_BASE64}`; // Default to local base64 image
 
-    if (req.file) {
-      const uploadResult = await uploadImageToCloudinary(req.file, "heroImages", 500, "auto");
-      imageUrl = uploadResult.secure_url;
-    }
+//     if (req.file) {
+//       const uploadResult = await uploadImageToCloudinary(req.file, "heroImages", 500, "auto");
+//       imageUrl = uploadResult.secure_url;
+//     }
 
-    let heroImage = await HeroImage.findOne();
-    if (heroImage) {
-      heroImage.imageUrl = imageUrl;
-      await heroImage.save();
-    } else {
-      heroImage = await HeroImage.create({ imageUrl });
-    }
+//     let heroImage = await HeroImage.findOne();
+//     if (heroImage) {
+//       heroImage.imageUrl = imageUrl;
+//       await heroImage.save();
+//     } else {
+//       heroImage = await HeroImage.create({ imageUrl });
+//     }
 
-    res.status(200).json({ message: "Hero image updated successfully", imageUrl: heroImage.imageUrl });
-  } catch (error) {
-    res.status(500).json({ message: "Error uploading hero image", error: error.message });
-  }
-};
+//     res.status(200).json({ message: "Hero image updated successfully", imageUrl: heroImage.imageUrl });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error uploading hero image", error: error.message });
+//   }
+// };
 // console.log(DEFAULT_IMAGE_PATH);
 // exports.getHeroImage = async (req, res) => {
 //   try {
@@ -249,32 +249,95 @@ exports.uploadHeroImage = async (req, res) => {
 // };
 
 
-//To Do: upload hero section image controllers -> chirag test them from here 
+// To Do: upload hero section image controllers -> chirag test them from here 
+// exports.getHeroImage = async (req, res) => {
+//   try {
+//     let heroImage = await HeroImage.findOne();
+
+//     if (!heroImage || !heroImage.imageUrl) {
+//       console.log("No uploaded hero image found, returning default image.");
+
+//       // Return the static URL of the default image
+//       return res.status(200).json({
+//         success: true,
+//         imageUrl: "/public/images/Driver-pro-logo.jfif",
+//       });
+//     }
+
+//     console.log("Returning uploaded hero image:", heroImage.imageUrl);
+//     res.status(200).json({
+//       success: true,
+//       imageUrl: heroImage.imageUrl,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching hero image:", error.message);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error fetching hero image",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+exports.uploadHeroImage = async (req, res) => {
+  try {
+    console.log("Received file in req.files:", req.files);
+
+    if (!req.files || !req.files.heroImage) {
+      return res.status(400).json({ success: false, message: "No image file provided" });
+    }
+
+    const file = req.files.heroImage;
+
+    // Ensure tempFilePath exists before uploading
+    // if (!file.tempFilePath) {
+    //   return res.status(500).json({ success: false, message: "Temporary file path missing" });
+    // }
+
+    // Upload image to Cloudinary using tempFilePath
+    const uploadResult = await uploadImageToCloudinary(file, process.env.FOLDER_NAME);
+    // const adIcon = await uploadImageToCloudinary(icon, process.env.FOLDER_NAME);
+
+    console.log("log after upload results ",uploadResult)
+    if (!uploadResult?.secure_url) {
+      return res.status(500).json({ success: false, message: "Image upload failed" });
+    }
+
+    console.log("image before storage upload : ",file)
+    console.log("image upload result before storage : ",uploadResult)
+
+    // Store image URL in MongoDB
+    let finalImage = await HeroImage.findOne();
+    console.log("after findOne hero image : ",finalImage)
+
+    if (!finalImage) {
+      console.log("inside if")
+      finalImage = new HeroImage({ imageUrl: uploadResult?.secure_url });
+      console.log("after creating new url ")
+    } else {
+      finalImage.imageUrl = uploadResult.secure_url;
+    }
+    await finalImage.save();
+
+    return res.status(200).json({ success: true, imageUrl: uploadResult?.secure_url });
+  } catch (error) {
+    console.error("Error uploading hero image:", error);
+    return res.status(500).json({ success: false, message: "Error uploading hero image", error: error.message });
+  }
+};
+
+// Get Hero Image (Return Cloudinary Image or Null)
 exports.getHeroImage = async (req, res) => {
   try {
     let heroImage = await HeroImage.findOne();
-
-    if (!heroImage || !heroImage.imageUrl) {
-      console.log("No uploaded hero image found, returning default image.");
-
-      // Return the static URL of the default image
-      return res.status(200).json({
-        success: true,
-        imageUrl: "/public/images/Driver-pro-logo.jfif",
-      });
-    }
-
-    console.log("Returning uploaded hero image:", heroImage.imageUrl);
     res.status(200).json({
       success: true,
-      imageUrl: heroImage.imageUrl,
+      imageUrl: heroImage ? heroImage.imageUrl : null,
     });
   } catch (error) {
-    console.error("Error fetching hero image:", error.message);
     res.status(500).json({
-      success: false,
-      message: "Error fetching hero image",
-      error: error.message,
+      success: false, message: "Error fetching hero image", error: error.message
     });
   }
 };

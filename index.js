@@ -70,7 +70,7 @@ app.get('/',(req,res)=>{
    res.send("Your server is up and running..");
 })
 
-app.use("/public", express.static(path.join(__dirname, "public")));
+// app.use("/public", express.static(path.join(__dirname, "public")));
 app.listen(PORT, ()=>{
    console.log( `Server is running at ${PORT}`)
 });
