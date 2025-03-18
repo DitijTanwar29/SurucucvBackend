@@ -24,8 +24,6 @@ exports.createJob = async (req, res) => {
         endDate, 
         jobType, 
         status,
-        licenseType = "", 
-        srcBox, 
         isSrc1, 
         isSrc2, 
         isSrc3, 
@@ -42,9 +40,22 @@ exports.createJob = async (req, res) => {
         isInternationalJob
       } = req.body;
   
+      console.log("Raw License Type Data:", req.body.licenseType);
+      console.log("req body:", req.body);
+      console.log("Raw License Type Data:", req.body.selectedLicenses);
+
+
+    //   const licenseType = req.body.licenseType;
+       // Ensure licenseType is always an array
+    //    const licenseTypeArray = Array.isArray(req.body.licenseType) ? req.body.licenseType : [];
+    const licenseTypeArray = Array.isArray(req.body["licenseType[]"]) 
+            ? req.body["licenseType[]"] 
+            : req.body["licenseType[]"] ? [req.body["licenseType[]"]] : [];
+// const licenseTypeArray = [].concat(req.body.licenseType || []);
       // Validate required fields
       if (!title || !description || !requiredExperience || !location || !companyName ||
-          !salaryRange || !salaryType || !vacancy || !startDate || !endDate || !jobType || !service || !licenseType) {
+          !salaryRange || !salaryType || !vacancy || !startDate || !endDate || !jobType || !service 
+          || licenseTypeArray.length === 0) {
         return res.status(400).json({
           success: false,
           message: "All fields are required",
@@ -127,7 +138,7 @@ console.log("packageDetails?.jobPostLimit :",packageDetails?.jobPostLimit)
         startDate,
         endDate,
         jobType,
-        licenseType,
+        licenseType : licenseTypeArray,
         isSrc1,
         isSrc2,
         isSrc3,

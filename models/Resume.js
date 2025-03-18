@@ -29,12 +29,17 @@ const resumeSchema = new mongoose.Schema({
     },
 
     // Main Certificates
+    // licenseType: {
+    //     type: Array,
+    //     // enum: [
+    //     //     'M', 'A1', 'A2', 'A', 'B1', 'B', 'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE', 'F', 'G'
+    //     // ],
+    // },
     licenseType: {
-        type: Array,
-        // enum: [
-        //     'M', 'A1', 'A2', 'A', 'B1', 'B', 'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE', 'F', 'G'
-        // ],
-    },
+        type: [String], // Array of strings
+        required: true, // Set to true if it's mandatory
+        default: [], // Default empty array
+      },
     isSrc1: {
         type: Boolean,
         default: false,
