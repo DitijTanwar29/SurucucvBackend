@@ -125,6 +125,28 @@ const COMPANY_FILTERS = {
     type: "checkbox",
     defaultOptions: LICENSE_TYPES,
   },
+  srcType: {
+    category: "certificates",
+    label: "SRC Requirements",
+    type: "checkbox",
+    defaultOptions: {
+      src1: { label: "SRC 1" },
+      src2: { label: "SRC 2" },
+      src3: { label: "SRC 3" },
+      src4: { label: "SRC 4" },
+    },
+  },
+  certificates: {
+    category: "certificates",
+    label: "Additional Certificates",
+    type: "checkbox",
+    defaultOptions: {
+      code95: { label: "Code 95 Document" },
+      adr: { label: "ADR License" },
+      psikoteknik: { label: "Psychotechnical" },
+      myk: { label: "MYK Certificate" },
+    },
+  },
   additionalTraining: {
     category: "training",
     label: "Additional Training",

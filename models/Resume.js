@@ -56,11 +56,11 @@ const resumeSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    psikoteknik: {
+    psikoteknik: { //need boolean variable
         type: Date,
         default: Date.now(),
     },
-    adrDrivingLicense:{
+    adrDrivingLicense:{ //need boolean variable
         type: Date,
         default: Date.now(),
     },
@@ -72,7 +72,7 @@ const resumeSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
-    mykCertificate: {
+    mykCertificate: { //need boolean variable
         type : Date,
         default: null,
     },
