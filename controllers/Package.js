@@ -1,7 +1,7 @@
 const Package = require("../models/Package");
 const nodemailer = require("nodemailer")
 const CompanyProfile = require("../models/CompanyProfile")
-
+const { sendNotificationToAdmin } = require("../utils/notificationUtils");
 exports.createPackage = async (req, res) => {
   try {
     const {
@@ -429,6 +429,8 @@ exports.paymentApprovalSms = async (req, res) => {
     //   { new: true }
     // );
 
+    console.log("user : ",user)
+
     // Create the message for SMS
     const message = `Payment received for Package Name: ${packageName} from User: ${user}. Please review and approve.`;
 
@@ -461,6 +463,9 @@ exports.paymentApprovalSms = async (req, res) => {
     // Handle response
     console.log('SMS Response:', response.data);
 
+     // Send payment notification to admin
+     await sendNotificationToAdmin("Payment", `${user}`, "Payment request");
+     
     // Return success message after sending SMS
     return res.status(200).json({
       success: true,

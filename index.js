@@ -22,7 +22,7 @@ const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const {cloudinaryConnect} = require("./config/cloudinary");
 const dotenv = require("dotenv");   
-
+const notificationRoutes = require("./Routes/Notification");
 
 // port 
 const PORT = process.env.PORT || 1200;
@@ -67,6 +67,7 @@ app.use("/api/v1/sector", sectorRoutes);
 app.use("/api/v1/package",packageRoutes);
 app.use("/api/v1/advertisement",AdvertisementRoutes)
 app.use("/api/v1/filters",filtersRoutes)
+app.use("/api/v1/notification", notificationRoutes);
 //default route
 app.get('/',(req,res)=>{
    res.send("Your server is up and running..");

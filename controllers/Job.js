@@ -6,7 +6,8 @@ const Sector = require("../models/Sector")
 const mongoose = require("mongoose");
 const CompanyProfile = require("../models/CompanyProfile");
 const Package = require("../models/Package")
-
+const { sendNotificationToAdmin } = require("../utils/notificationUtils");
+  
 exports.createJob = async (req, res) => {
     try {
       const userId = req.user.id;
@@ -171,6 +172,9 @@ console.log("packageDetails?.jobPostLimit :",packageDetails?.jobPostLimit)
         { $push: { jobs: newJob._id } },
         { new: true }
       );
+
+      // Send job notification to admin
+    await sendNotificationToAdmin("Job", companyProfile.companyTitle, title);
   
       return res.status(200).json({
         success: true,

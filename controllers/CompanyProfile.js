@@ -355,6 +355,7 @@ exports.unenrollCompanyFromPackage = async (req, res) => {
       companyId,
       {
         $pull: { package: packageId }, // Remove the package from the array
+        $set: { paymentStatus : "Unpurchased" },
       },
       { new: true }
     );
@@ -368,6 +369,7 @@ exports.unenrollCompanyFromPackage = async (req, res) => {
       packageId,
       {
         $pull: { enrolledCompanies: companyId }, // Remove the company from enrolled companies
+        $set: { paymentStatus : "Unpurchased" },
       },
       { new: true }
     );

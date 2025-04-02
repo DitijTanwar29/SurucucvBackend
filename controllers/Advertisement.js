@@ -1,10 +1,10 @@
 // controllers/advertisementController.js
 const Advertisement = require('../models/Advertisement');
-const CompanyProfile = require('../models/CompanyProfile');
-const Company = require('../models/CompanyProfile');
+// const CompanyProfile = require('../models/CompanyProfile');
+// const Company = require('../models/CompanyProfile');
 const User = require('../models/User')
 const {uploadImageToCloudinary} = require("../utils/imageUploader");
-
+const { sendNotificationToAdmin } = require("../utils/notificationUtils");
 // Controller: createAdvertisement
 // exports.createAdvertisement = async (req, res) => {
 //   try {
@@ -184,6 +184,9 @@ exports.createAdvertisement = async (req, res) => {
 
       await newAdvertisement.save();
 
+      // Send ad notification to admin
+    await sendNotificationToAdmin("Advertisement", companyProfile.companyTitle, title);
+    
       return res.status(200).json({
           success: true,
           message: "Advertisement created successfully.",
