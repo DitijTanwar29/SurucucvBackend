@@ -619,7 +619,58 @@ exports.showAppliedCandidates = async (req, res) => {
     }
 };
 
-
+//withdraw job application
+exports.withdrawJobApplication = async (req, res) => {
+    try {
+      const { jobId, userId } = req.body;
+      console.log("req.body : ",req.body)
+      
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Please Provide User ID" });
+      }
+      if (!jobId) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Please Provide Job ID" });
+      }
+  
+      // Remove candidate from job's appliedCandidates list
+      const updatedJob = await Job.findByIdAndUpdate(
+        jobId,
+        { $pull: { appliedCandidates: userId } },
+        { new: true }
+      );
+  
+      if (!updatedJob) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Job post not found" });
+      }
+  
+      // Remove job from candidate's jobs list
+      const updatedCandidate = await User.findByIdAndUpdate(
+        userId,
+        { $pull: { jobs: jobId } },
+        { new: true }
+      );
+  
+      if (!updatedCandidate) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Candidate not found" });
+      }
+  
+      return res.status(200).json({
+        success: true,
+        message: "Successfully withdrawn from the job application",
+      });
+    } catch (error) {
+      console.error("Error withdrawing job application:", error);
+      return res.status(500).json({ error: "Error withdrawing application" });
+    }
+  };
 
 
 //     try {
