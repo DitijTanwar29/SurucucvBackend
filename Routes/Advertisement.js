@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { auth, isCompany, isAdmin } = require("../middleware/auth");
+const {checkUserStatus} = require("../middleware/checkUserStatus")
 
 const {
     createAdvertisement,
@@ -12,14 +13,13 @@ const {
     getActiveAds,
     getAdvertisementsByCompany
 } = require("../controllers/Advertisement");
-
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 //                       Advertisement Routes
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-router.post("/createAdvertisement", auth, createAdvertisement)
-router.put("/updateAdvertisement", auth, isCompany, updateAdvertisement);
-router.post("/deleteAdvertisement", auth, deleteAdvertisement);
+router.post("/createAdvertisement", auth,isCompany,checkUserStatus, createAdvertisement)
+router.put("/updateAdvertisement", auth, isCompany,checkUserStatus, updateAdvertisement);
+router.post("/deleteAdvertisement", auth, isCompany, checkUserStatus,deleteAdvertisement);
 router.post("/getAdDetails",getAdById)
 router.get("/getActiveAds",getActiveAds);
 router.get("/showAllAds", showAllAds);

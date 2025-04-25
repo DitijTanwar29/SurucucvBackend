@@ -602,6 +602,13 @@ exports.login = async (req, res) => {
          });
       }
 
+      // 🔒 RESTRICTION CHECK
+    if (user.status === "Restricted") {
+      return res.status(403).json({
+        success: false,
+        message: "You are restricted from accessing the platform."
+      });
+    }
       //generate JWT, After password matching
       if(await bcrypt.compare(password, user.password)) {
          const payload  = {

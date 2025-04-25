@@ -9,13 +9,12 @@ const { createResume, getResumeDetails } = require("../controllers/Resume");
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
-
+const {checkUserStatus} = require("../middleware/checkUserStatus")
 //************************************************************************************************
-//                                   Job routes
+//                                   Resume routes
 // *************************************************************************************************
 
 
-//Service can only be created by Admin
-router.post("/createResume", auth , isCandidate, createResume);
-router.get("/getResumeDetails", getResumeDetails);
+router.post("/createResume", auth , isCandidate,checkUserStatus, createResume);
+router.get("/getResumeDetails",auth, checkUserStatus,getResumeDetails);
 module.exports = router;

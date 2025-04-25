@@ -71,6 +71,11 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:"Resume",
     },
+    status: {
+        type: String,
+        enum: ["Active", "Restricted"],
+        default: "Active"
+      },
     
 })
 

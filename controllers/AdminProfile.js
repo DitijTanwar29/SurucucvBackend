@@ -3,6 +3,8 @@ const AdminProfile = require("../models/AdminProfile");
 const User = require("../models/User");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 const HeroImage = require("../models/HeroImage");
+// const CompanyProfile = require("../../models/CompanyProfile");
+// const Candidate = require("../../models/Candidate");
 const fs = require("fs");
 const path = require("path");
 // const DEFAULT_HERO_IMAGE = require("../public/images/Driver-pro-logo.jfif"); // Replace with your actual default image URL
@@ -341,3 +343,72 @@ exports.getHeroImage = async (req, res) => {
     });
   }
 };
+
+
+
+exports.getAllCompanies = async (req, res) => {
+  try {
+    const companies = await User.find({ accountType: "Company" })
+      .select("email status companyDetails")
+      .populate("companyDetails", "companyTitle sector");
+
+    res.status(200).json(companies);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching companies", error });
+  }
+};
+
+
+exports.getAllCandidates = async (req, res) => {
+  try {
+    const candidates = await User.find({ accountType: "Candidate" })
+      .select("email status candidateDetails")
+      .populate("candidateDetails", "fullName phone");
+
+    res.status(200).json(candidates);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching candidates", error });
+  }
+};
+
+
+exports.toggleCompanyProfileStatus = async (req, res) => {
+  try {
+    const { userId, newStatus } = req.body;
+    console.log(req.body)
+console.log(userId)
+    const user = await User.findById(userId);
+    console.log("user : ",user)
+    if (!user) {
+      return res.status(404).json({ message: "Company user not found" });
+    }
+
+    user.status = newStatus;
+    await user.save();
+
+    res.status(200).json({ success:true,message: `Company status updated to ${newStatus}` });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Error updating status", error });
+  }
+};
+
+
+exports.toggleCandidateProfileStatus = async (req, res) => {
+  try {
+    const { userId, newStatus } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user || user.accountType !== "Candidate") {
+      return res.status(404).json({ message: "Candidate user not found" });
+    }
+
+    user.status = newStatus;
+    await user.save();
+
+    res.status(200).json({ success: true, message: `Candidate status updated to ${newStatus}` });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating status", error });
+  }
+};
+

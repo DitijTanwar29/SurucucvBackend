@@ -2,6 +2,76 @@ const Package = require("../models/Package");
 const nodemailer = require("nodemailer")
 const CompanyProfile = require("../models/CompanyProfile")
 const { sendNotificationToAdmin } = require("../utils/notificationUtils");
+// exports.createPackage = async (req, res) => {
+//   try {
+//     const {
+//       packageName,
+//       packagePrice,
+//       discountedPrice,
+//       features,
+//       jobPostLimit,
+//       advertisingLimit,
+//       startDate,
+//       endDate,
+//       status,
+//       resumeViews,
+//       packageDuration,
+//       paymentStatus
+//     } = req.body;
+
+//     // validate data
+//     if (
+//       !packageName ||
+//       !packagePrice ||
+//       !discountedPrice ||
+//       !features ||
+//       !jobPostLimit ||
+//       !advertisingLimit ||
+//       !resumeViews || 
+//       !packageDuration
+//       // !startDate ||
+//       // !endDate
+//     ) {
+//       return res.status(403).json({
+//         success: false,
+//         message: "All fields are required.",
+//       });
+//     }
+
+//     if (!status || status === undefined) {
+//       status = "Inactive";
+//     }
+    
+//     // const newPackage = new Packages(req.body);
+//     const newPackage = await Package.create({
+//       packageName: packageName,
+//       packagePrice: packagePrice,
+//       discountedPrice: discountedPrice,
+//       features: features,
+//       jobPostLimit: jobPostLimit,
+//       advertisingLimit: advertisingLimit,
+//       startDate: startDate,
+//       endDate: endDate,
+//       status: status,
+//       resumeViews: resumeViews,
+//       packageDuration: packageDuration,
+//     });
+//     // await newPackage.save();
+//     return res.status(200).json({
+//       success: true,
+//       message: "Package created successfully.",
+//       data: newPackage,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+
+
+
+//creating package with new features 
 exports.createPackage = async (req, res) => {
   try {
     const {
@@ -11,61 +81,51 @@ exports.createPackage = async (req, res) => {
       features,
       jobPostLimit,
       advertisingLimit,
-      startDate,
-      endDate,
-      status,
       resumeViews,
       packageDuration,
-      paymentStatus
+      homepageVisibilityTime,
+      numberOfAds,
+      advertisementPublicationTime,
+      candidatePoolAccess,
+      candidatePoolAccessTime,
+      candidatePoolViewLimit
     } = req.body;
 
-    // validate data
-    if (
-      !packageName ||
-      !packagePrice ||
-      !discountedPrice ||
-      !features ||
-      !jobPostLimit ||
-      !advertisingLimit ||
-      !resumeViews || 
-      !packageDuration
-      // !startDate ||
-      // !endDate
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "All fields are required.",
-      });
-    }
-
-    if (!status || status === undefined) {
-      status = "Inactive";
-    }
-    
-    // const newPackage = new Packages(req.body);
     const newPackage = await Package.create({
-      packageName: packageName,
-      packagePrice: packagePrice,
-      discountedPrice: discountedPrice,
-      features: features,
-      jobPostLimit: jobPostLimit,
-      advertisingLimit: advertisingLimit,
-      startDate: startDate,
-      endDate: endDate,
-      status: status,
-      resumeViews: resumeViews,
-      packageDuration: packageDuration,
+      packageName,
+      packagePrice,
+      discountedPrice,
+      features,
+      jobPostLimit,
+      advertisingLimit,
+      resumeViews,
+      packageDuration,
+      homepageVisibilityTime,
+      numberOfAds,
+      advertisementPublicationTime,
+      candidatePoolAccess,
+      candidatePoolAccessTime,
+      candidatePoolViewLimit
     });
-    // await newPackage.save();
-    return res.status(200).json({
+
+    res.status(201).json({
       success: true,
-      message: "Package created successfully.",
-      data: newPackage,
+      message: 'Package created successfully',
+      package: newPackage,
     });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("Error creating package", err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+
+
+
+
+
+
+
 
 // Update an existing advertising package
 exports.updateAdvertisingPackage = async (req, res) => {

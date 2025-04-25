@@ -15,6 +15,7 @@ const { createJob, showAllJobs, updateJob, deleteJob, getJobDetails, approveAJob
 
 //Import middlewares
 const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
+const {checkUserStatus} =require("../middleware/checkUserStatus")
 
 //************************************************************************************************
 //                                   Job routes
@@ -22,17 +23,17 @@ const { auth, isCompany, isCandidate, isAdmin} = require("../middleware/auth");
 
 
 //Service can only be created by Admin
-router.post("/createJob", auth , isCompany, createJob);
+router.post("/createJob", auth , isCompany, checkUserStatus, createJob);
 router.get("/showAllJobs", showAllJobs);
 router.post("/showAllJobsByCompany", showJobsByUserOrCompany);
 router.post("/getJobDetails", getJobDetails);
-router.post("/editJob", auth, isCompany, updateJob);
-router.delete("/deleteJob", auth, isCompany, deleteJob);
+router.post("/editJob", auth, isCompany, checkUserStatus, updateJob);
+router.delete("/deleteJob", auth, isCompany,checkUserStatus, deleteJob);
 router.post("/approveAJobPost", auth, isAdmin, approveAJobPost);
 router.get("/getAllApprovedJobPosts",getAllApprovedJobPosts);
-router.post("/applyForJob", auth, isCandidate, applyForJob)
-router.get("/showAppliedJobs", auth, showAppliedJobs);
-router.get("/showAppliedCandidates", showAppliedCandidates);
+router.post("/applyForJob", auth, isCandidate, checkUserStatus,applyForJob)
+router.get("/showAppliedJobs", auth,checkUserStatus, showAppliedJobs);
+router.get("/showAppliedCandidates", checkUserStatus,showAppliedCandidates);
 router.get("/getTopJobPostings", getTopJobPostings);
 router.get('/searchJobs', searchJobs);
 router.get('/recentlyPublishedJobs', getRecentlyPublishedJobs);
@@ -45,5 +46,5 @@ router.get('/by-province', getJobsByProvince);
 router.get('/by-sector', getJobsBySector);
 router.get('/by-service', getJobsByService);
 //candidate route 
-router.post("/withdrawJobApplication", withdrawJobApplication);
+router.post("/withdrawJobApplication",checkUserStatus, withdrawJobApplication);
 module.exports = router;
