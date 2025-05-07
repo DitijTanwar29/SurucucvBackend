@@ -1,5 +1,5 @@
 const ServiceModel = require("../models/Service");
-const  jobs = require("../models/Job");
+const jobs = require("../models/Job");
 const resume = require("../models/Resume");
 const mongoose = require("mongoose");
 
@@ -61,7 +61,7 @@ const CANDIDATE_FILTERS = {
         defaultOptions: {
             "Full_Time": { label: "Full Time" },
             "Part_Time": { label: "Part Time" },
-            "Internship": {label: "Internship"},
+            "Internship": { label: "Internship" },
             "Temporary_Job": { label: "Temporary Job" }
         }
     },
@@ -164,10 +164,10 @@ const getFilterOptions = async (userType) => {
 
 
 // Controller to get filters
- const getFilters = async (req, res) => {
+const getFilters = async (req, res) => {
     try {
 
-        const { userType } = req.query; 
+        const { userType } = req.query;
         console.log("userType", userType);
 
         if (!userType) {
@@ -225,15 +225,15 @@ const applyFilters = async (req, res) => {
     }
 };
 
-const getFilteredJobs = async (filters, userType ,page = 1, limit = 10) => {
+const getFilteredJobs = async (filters, userType, page = 1, limit = 10) => {
     try {
 
         const matchStage = buildQueryFromFilters(filters);
-     
+
         const pipeline = [
             { $match: matchStage },
-            { $sort: { publishedDate: -1 } },
-            { $skip: (page - 1) * limit }, 
+            { $sort: { publishedDate: -1, createdAt: -1 } },
+            { $skip: (page - 1) * limit },
             { $limit: limit },
             {
                 $lookup: {
@@ -245,6 +245,17 @@ const getFilteredJobs = async (filters, userType ,page = 1, limit = 10) => {
             },
             {
                 $project: {
+                    // Base Data
+                    licenseType: 1,
+                    isSrc1: 1,
+                    isSrc2: 1,
+                    isSrc3: 1,
+                    isSrc4: 1,
+                    psikoteknik: 1,
+                    adrDrivingLicence: 1,
+                    isCode95Document: 1,
+                    
+                    // Job related data
                     jobTitle: 1,
                     jobDescription: 1,
                     companyImage: 1,
@@ -252,25 +263,33 @@ const getFilteredJobs = async (filters, userType ,page = 1, limit = 10) => {
                     jobType: 1,
                     rangeOfSalary: 1,
                     jobLocation: 1,
-                    isSrc1:1,
-                    licenseType: 1,
-                    isSrc2:1,
-                    isSrc3: 1,
-                    isSrc4: 1,
-                    psikoteknik:1,
-                    adrDrivingLicence:1,
-                    isCode95Document:1,
                     serviceDetails: { name: 1 },
+                    requiredExperience: 1,
+                    isInternationalJob: 1,
+                    isBlindSpotTraining: 1,
+                    isFuelEconomyTraining: 1,
+                    isSafeDrivingTraining: 1,
+
+                    // Resume related data
+                    firstName: 1,
+                    lastName: 1,
+                    email: 1,
+                    city: 1,
+                    state: 1,
+                    europeanExperiencePeriod: 1,
+                    russiaExperiencePeriod: 1,
+                    turkicRepublicsExperiencePeriod: 1,
+                    southExperienceTime: 1
                 },
             },
         ];
 
-        if(userType === USER_TYPES.CANDIDATE){
+        if (userType === USER_TYPES.CANDIDATE) {
             console.log('CandidateJobs')
             return await jobs.aggregate(pipeline);
         }
-        
-        return await resume.aggregate(pepline);    
+
+        return await resume.aggregate(pipeline);
     } catch (error) {
         console.error("Error fetching jobs:", error);
         throw error;
@@ -283,14 +302,14 @@ const buildQueryFromFilters = (filters) => {
 
     const filterMapping = {
         services: (value) => ({
-            service: { $in: value.map(id => new mongoose.Types.ObjectId(id))}
+            service: { $in: value.map(id => new mongoose.Types.ObjectId(id)) }
         }),
         jobType: (value) => ({
             jobType: { $in: value.map((job) => job.replace("_", " ")) },
         }),
-        
+
         licenseType: (value) => ({
-            licenseType: { $in: value } 
+            licenseType: { $in: value }
         }),
         certificates: (value) => {
             const certConditions = value.map(cert => {
@@ -350,7 +369,7 @@ const buildQueryFromFilters = (filters) => {
     }
 
     Object.entries(filters).forEach(([key, value]) => {
-        if(value?.length && filterMapping[key]){
+        if (value?.length && filterMapping[key]) {
             Object.assign(matchStage, filterMapping[key](value))
         }
     });
